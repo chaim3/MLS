@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useTranslate } from "~/lib/useTranslate";
 import { LangSwitcher } from "~/components/LangSwitcher";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export type Project = {
   id: string;
@@ -320,6 +320,7 @@ function Home() {
 
 function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: (key: string) => string }) {
   const [showDesc, setShowDesc] = useState(false);
+  const descLocked = useRef(false);
   const photos: string[] = JSON.parse(project.photo_urls || "[]");
   const types: string[] = JSON.parse(project.property_types || "[]");
   const statusColors: Record<string, string> = {
@@ -329,9 +330,10 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
   };
 
   return (
+    <>
     <Link
       to={"/projects/" + project.id}
-      onClick={(e) => { e.preventDefault(); window.location.href = "/projects/" + project.id; }}
+      onClick={(e) => { if (descLocked.current) { e.preventDefault(); return; } e.preventDefault(); window.location.href = "/projects/" + project.id; }}
       className={`group block overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-xl ${
         project.featured
           ? "border-amber-200 hover:border-amber-300 hover:-translate-y-1.5 hover:shadow-amber-100/50"
@@ -439,7 +441,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
         {project.description && (
           <button
             type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDesc(true); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); descLocked.current = true; setShowDesc(true); }}
             className="mt-3 w-full text-left text-sm leading-relaxed text-gray-600 line-clamp-3 hover:text-blue-600 transition"
           >
             {project.description}
@@ -474,11 +476,12 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
           ) : null}
         </div>
       </div>
+    </Link>
       {/* Description Modal */}
       {showDesc && project.description && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTimeout(() => setShowDesc(false), 50); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); descLocked.current = false; setShowDesc(false); }}
         >
           <div
             className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl"
@@ -487,7 +490,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-bold text-gray-900">{project.name}</h3>
               <button
-                onClick={(e) => { e.stopPropagation(); setTimeout(() => setShowDesc(false), 50); }}
+                onClick={(e) => { e.stopPropagation(); descLocked.current = false; setShowDesc(false); }}
                 className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -501,6 +504,6 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
           </div>
         </div>
       )}
-    </Link>
+    </>
   );
 }
