@@ -138,6 +138,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "dashboard.saveError": "שגיאה בשמירה",
     "dashboard.leadsFor": "פניות -",
     "dashboard.uploadPhoto": "העלאת תמונת פרופיל",
+    "dashboard.uploadProjectPhoto": "העלאת תמונה",
     "dashboard.photoHint": "JPEG, PNG, WebP או GIF. גודל מקסימלי 5MB",
 
     // Language
@@ -279,6 +280,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "dashboard.saveError": "Error saving",
     "dashboard.leadsFor": "Leads -",
     "dashboard.uploadPhoto": "Upload Profile Photo",
+    "dashboard.uploadProjectPhoto": "Upload Photo",
     "dashboard.photoHint": "JPEG, PNG, WebP or GIF. Max size 5MB",
 
     // Language

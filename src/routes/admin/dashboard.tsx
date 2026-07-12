@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { LangSwitcher } from "~/components/LangSwitcher";
 
 type AdminData = {
@@ -22,6 +22,40 @@ function AdminDashboard() {
   const [editingAgent, setEditingAgent] = useState<any | null>(null);
   const [viewingAgent, setViewingAgent] = useState<any | null>(null);
   const [formMsg, setFormMsg] = useState("");
+  const addPhotoInputRef = useRef<HTMLInputElement>(null);
+  const editPhotoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) {
+        const form = document.getElementById("addProjectForm") as HTMLFormElement;
+        const input = form?.querySelector('[name="photo_url"]') as HTMLInputElement;
+        if (input) input.value = dataUrl;
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleEditPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) {
+        const form = document.getElementById("editProjectForm") as HTMLFormElement;
+        const input = form?.querySelector('[name="photo_url"]') as HTMLInputElement;
+        if (input) input.value = dataUrl;
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   const loadData = useCallback(async () => {
     const res = await fetch("/api/admin/dashboard");
@@ -452,7 +486,7 @@ function AdminDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-lg rounded-2xl bg-gray-800 p-6 shadow-2xl border border-gray-700">
             <h2 className="mb-4 text-xl font-bold">Add New Project</h2>
-            <form onSubmit={handleAddProject} className="space-y-3">
+            <form id="addProjectForm" onSubmit={handleAddProject} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs text-gray-400">Project Name *</label>
@@ -509,7 +543,13 @@ function AdminDashboard() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs text-gray-400">Photo URL (public https:// link)</label>
-                  <input name="photo_url" className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="https://example.com/photo.jpg" />
+                  <div className="flex gap-2">
+                    <input name="photo_url" className="flex-1 w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="https://example.com/photo.jpg" />
+                    <button type="button" onClick={() => addPhotoInputRef.current?.click()} className="shrink-0 rounded-lg bg-amber-600/30 px-3 py-2 text-xs text-amber-300 hover:bg-amber-600/50 whitespace-nowrap">
+                      Upload Photo
+                    </button>
+                  </div>
+                  <input ref={addPhotoInputRef} type="file" accept="image/*" className="hidden" onChange={handleAddPhotoUpload} />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs text-gray-400">Project Website URL</label>
@@ -571,7 +611,7 @@ function AdminDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-lg rounded-2xl bg-gray-800 p-6 shadow-2xl border border-gray-700" style={{ maxHeight: "90vh", overflowY: "auto" }}>
             <h2 className="mb-4 text-xl font-bold">Edit Project</h2>
-            <form onSubmit={handleUpdateProject} className="space-y-3">
+            <form id="editProjectForm" onSubmit={handleUpdateProject} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs text-gray-400">Project Name</label>
@@ -628,7 +668,13 @@ function AdminDashboard() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs text-gray-400">Photo URL</label>
-                  <input name="photo_url" defaultValue={(JSON.parse(editingProject.photo_urls || "[]") as string[])[0] || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="https://..." />
+                  <div className="flex gap-2">
+                    <input name="photo_url" defaultValue={(JSON.parse(editingProject.photo_urls || "[]") as string[])[0] || ""} className="flex-1 w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="https://..." />
+                    <button type="button" onClick={() => editPhotoInputRef.current?.click()} className="shrink-0 rounded-lg bg-amber-600/30 px-3 py-2 text-xs text-amber-300 hover:bg-amber-600/50 whitespace-nowrap">
+                      Upload Photo
+                    </button>
+                  </div>
+                  <input ref={editPhotoInputRef} type="file" accept="image/*" className="hidden" onChange={handleEditPhotoUpload} />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs text-gray-400">Website URL</label>

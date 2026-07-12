@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslate } from "~/lib/useTranslate";
 import { LangSwitcher } from "~/components/LangSwitcher";
 
@@ -62,6 +62,7 @@ function DashboardPage() {
   const [currentProjectId, setCurrentProjectId] = useState("");
   const [showProfile, setShowProfile] = useState(false);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
+  const projectPhotoInputRef = useRef<HTMLInputElement>(null);
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -129,9 +130,9 @@ function DashboardPage() {
       city: p.city,
       description: p.description || "",
       address: p.address || "",
-      priceMin: p.price_min?.toString() || "",
-      priceMax: p.price_max?.toString() || "",
-      unitCount: p.unit_count?.toString() || "",
+      priceMin: p.price_min === 0 ? "" : p.price_min?.toString() || "",
+      priceMax: p.price_max === 0 ? "" : p.price_max?.toString() || "",
+      unitCount: p.unit_count === 0 ? "" : p.unit_count?.toString() || "",
       handoverDate: p.handover_date || "",
       status: p.status || "pre-sale",
       photoUrls: (JSON.parse(p.photo_urls || "[]") as string[]).join("\n"),
@@ -163,9 +164,9 @@ function DashboardPage() {
       city: formData.city,
       address: formData.address,
       propertyTypes: types,
-      priceMin: parseInt(formData.priceMin) || 0,
-      priceMax: parseInt(formData.priceMax) || 0,
-      unitCount: parseInt(formData.unitCount) || 0,
+      priceMin: parseInt(formData.priceMin) || undefined,
+      priceMax: parseInt(formData.priceMax) || undefined,
+      unitCount: parseInt(formData.unitCount) || undefined,
       handoverDate: formData.handoverDate,
       status: formData.status,
       photoUrls,
@@ -205,6 +206,24 @@ function DashboardPage() {
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/";
+  };
+
+  const handleProjectPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) {
+        setFormData((prev) => ({
+          ...prev,
+          photoUrls: prev.photoUrls ? prev.photoUrls + "\n" + dataUrl : dataUrl,
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
+    // Reset input so the same file can be selected again
+    e.target.value = "";
   };
 
   return (
@@ -534,6 +553,26 @@ function DashboardPage() {
                   }
                   className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:border-blue-500 focus:outline-none"
                 />
+                {/* Project Photo Upload */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => projectPhotoInputRef.current?.click()}
+                    className="rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                  >
+                    {t("dashboard.uploadProjectPhoto")}
+                  </button>
+                  <input
+                    ref={projectPhotoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleProjectPhotoUpload}
+                  />
+                  <span className="text-xs text-gray-400">
+                    {t("dashboard.photoHint")}
+                  </span>
+                </div>
                 <textarea
                   name="floorPlanUrls"
                   placeholder={t("dashboard.floorPlanUrls")}

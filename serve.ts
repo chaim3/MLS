@@ -245,7 +245,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
       const rel = db.prepare("SELECT * FROM project_agents WHERE project_id = ? AND agent_id = ?").get(id, agent.id);
       if (!rel) return Response.json({ error: "Unauthorized" }, { status: 403 });
       db.prepare(`UPDATE projects SET name=?, description=?, city=?, address=?, lat=?, lng=?, property_types=?, price_min=?, price_max=?, unit_count=?, handover_date=?, status=?, photo_urls=?, floor_plan_urls=?, website_url=?, updated_at=datetime('now') WHERE id=?`)
-        .run(name, description || "", city, address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin || 0, priceMax || 0, unitCount || 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "", id);
+        .run(name, description || "", city, address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin ?? 0, priceMax ?? 0, unitCount ?? 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "", id);
       return Response.json({ success: true, id });
     } else {
       // Check for duplicate project by name + city
@@ -257,7 +257,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
       }
       const projectId = uuid();
       db.prepare(`INSERT INTO projects (id, name, description, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(projectId, name, description || "", city, address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin || 0, priceMax || 0, unitCount || 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "");
+        .run(projectId, name, description || "", city, address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin ?? 0, priceMax ?? 0, unitCount ?? 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "");
       db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run(projectId, agent.id);
       return Response.json({ success: true, id: projectId });
     }
