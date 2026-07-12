@@ -81,6 +81,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "dashboard.editProfile": "עריכת פרופיל",
     "dashboard.profileUpdated": "הפרופיל עודכן",
     "dashboard.save": "שמור",
+    "dashboard.saveProject": "שמור פרויקט",
     "project.website": "אתר הפרויקט",
     "project.visitWebsite": "בקר באתר הפרויקט",
 
@@ -257,6 +258,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "dashboard.leads": "Leads",
     "dashboard.logout": "Logout",
     "dashboard.save": "Save Profile",
+    "dashboard.saveProject": "Save Project",
     "dashboard.newProjectTitle": "New Project",
     "dashboard.editProjectTitle": "Edit Project",
     "dashboard.projectName": "Project Name *",

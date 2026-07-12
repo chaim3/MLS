@@ -552,7 +552,7 @@ function DashboardPage() {
                   type="submit"
                   className="w-full rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
                 >
-                  {t("dashboard.save")}
+                  {t("dashboard.saveProject")}
                 </button>
               </form>
             </div>
