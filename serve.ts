@@ -82,11 +82,11 @@ function getDb(): Database {
       .run(adminId, "Admin", "MLS Israel", "chaim@bienenfeld.org", "0587011221", adminPw, "מנהל המערכת");
   }
 
-  const demoAgentExists = _db.prepare("SELECT id FROM agents WHERE email = 'demo@example.com'").get();
+  const demoAgentExists = _db.prepare("SELECT id FROM agents WHERE email = 'info@forgeoneconsulting.com'").get();
   if (!demoAgentExists) {
     const demoId = "demo-agent-001";
     _db.prepare("INSERT INTO agents (id, name, company, email, phone, password, description) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .run(demoId, "ישראל ישראלי", "יזמות ובנייה בע״מ", "demo@example.com", "03-5555555", bcrypt.hashSync("demo123", 10), "סוכן נדל״ן מנוסה עם 15 שנות ניסיון בליווי רוכשים בפרויקטים חדשים ברחבי הארץ.");
+      .run(demoId, "ישראל ישראלי", "יזמות ובנייה בע״מ", "info@forgeoneconsulting.com", "03-5555555", bcrypt.hashSync("demo123", 10), "סוכן נדל״ן מנוסה עם 15 שנות ניסיון בליווי רוכשים בפרויקטים חדשים ברחבי הארץ.");
 
     const demoProjects = [
       { name: "מגדל היובל", city: "תל אביב", address: "רחוב היובל 15", types: ["דירה", "דופלקס"], priceMin: 2500000, priceMax: 5800000, units: 120, handover: "רבעון 3 2026", status: "under-construction", desc: "מגדל יוקרתי בן 35 קומות בלב תל אביב. דירות נוף לים, גג פנטהאוז, בריכה וחדר כושר.", descEn: "A luxurious 35-story tower in the heart of Tel Aviv. Sea-view apartments, penthouse roof, swimming pool, and gym.", featured: 1, website: "https://migdal-hayovel.co.il" },
@@ -640,6 +640,35 @@ async function apiHandler(req: Request): Promise<Response | null> {
     }
   }
 
+  // SEO: Schema.org JSON-LD
+  if (pathname === "/api/seo/schema" && req.method === "GET") {
+    const db = getDb();
+    const projects = db.prepare("SELECT id, name, description, city, price_min, price_max, updated_at FROM projects ORDER BY updated_at DESC LIMIT 50").all() as any[];
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "RealEstateListing",
+      "name": "MLS Israel",
+      "description": "הפלטפורמה המובילה לחיפוש פרויקטי בנייה חדשים בישראל. דירות חדשות, בתים ווילות בפריסייל ובבנייה.",
+      "url": "https://mls-israel.ctonew.app",
+      "areaServed": { "@type": "Country", "name": "IL" },
+      "inLanguage": ["he", "en"],
+      "itemListElement": projects.map((p: any) => ({
+        "@type": "Product",
+        "name": p.name,
+        "description": p.description || "",
+        "url": `https://mls-israel.ctonew.app/projects/${p.id}`,
+        "address": { "@type": "PostalAddress", "addressLocality": p.city },
+        "offers": {
+          "@type": "AggregateOffer",
+          "priceCurrency": "ILS",
+          "lowPrice": p.price_min || 0,
+          "highPrice": p.price_max || 0,
+        },
+      })),
+    };
+    return Response.json(schema);
+  }
+
   return null;
 }
 
@@ -655,6 +684,34 @@ for (let attempt = 1; ; attempt++) {
         const apiResp = await apiHandler(req);
         if (apiResp) return apiResp;
         const { pathname } = new URL(req.url);
+
+        // robots.txt
+        if (pathname === "/robots.txt") {
+          return new Response("User-agent: *\nAllow: /\nSitemap: https://mls-israel.ctonew.app/sitemap.xml\n", {
+            headers: { "Content-Type": "text/plain" },
+          });
+        }
+
+        // Sitemap
+        if (pathname === "/sitemap.xml") {
+          const db = getDb();
+          const projects = db.prepare("SELECT id, created_at FROM projects").all() as any[];
+          const agents = db.prepare("SELECT id, created_at FROM agents").all() as any[];
+          const now = new Date().toISOString().split("T")[0];
+          let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+          xml += `  <url><loc>https://mls-israel.ctonew.app/</loc><lastmod>${now}</lastmod><priority>1.0</priority></url>\n`;
+          for (const p of projects) {
+            const lastmod = p.updated_at ? p.updated_at.split(" ")[0] : now;
+            xml += `  <url><loc>https://mls-israel.ctonew.app/projects/${p.id}</loc><lastmod>${lastmod}</lastmod><priority>0.8</priority></url>\n`;
+          }
+          for (const a of agents) {
+            const lastmod = a.updated_at ? a.updated_at.split(" ")[0] : now;
+            xml += `  <url><loc>https://mls-israel.ctonew.app/agents/${a.id}</loc><lastmod>${lastmod}</lastmod><priority>0.5</priority></url>\n`;
+          }
+          xml += `</urlset>`;
+          return new Response(xml, { headers: { "Content-Type": "application/xml" } });
+        }
+
         // Try public directory first (for uploaded files)
         if (pathname !== "/") {
           const publicFile = Bun.file(PUBLIC_DIR + pathname);

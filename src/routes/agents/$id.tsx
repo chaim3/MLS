@@ -3,7 +3,22 @@ import { useTranslate } from "~/lib/useTranslate";
 import { LangSwitcher } from "~/components/LangSwitcher";
 
 export const Route = createFileRoute("/agents/$id")({
+  head: (ctx) => {
+    const data = ctx.loaderData as any;
+    if (!data || !data.agent) return {};
+    const agent = data.agent;
+    return {
+      meta: [
+        { title: agent.name + " - MLS Israel" },
+        { name: "description", content: agent.description || "Real estate agent at MLS Israel" },
+        { property: "og:title", content: agent.name + " - MLS Israel Agent" },
+        { property: "og:description", content: agent.description || "Contact " + agent.name + " for new construction projects in Israel." },
+        { property: "og:url", content: "https://mls-israel.ctonew.app/agents/" + agent.id },
+      ],
+    };
+  },
   loader: async ({ params }) => {
+
     const base = typeof window !== 'undefined' ? '' : 'http://localhost:3000';
     const res = await fetch(`${base}/api/public/agents/${params.id}`);
     if (!res.ok) return null;

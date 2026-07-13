@@ -16,12 +16,26 @@ export const Route = createRootRoute({
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
-      { title: "MLS Israel — פרויקטים חדשים בישראל" },
+      { title: "MLS Israel — פרויקטים חדשים בישראל | New Construction Projects" },
       {
         name: "description",
         content:
-          "הפלטפורמה המובילה לחיפוש פרויקטי בנייה חדשים בישראל. דירות חדשות, בתים ווילות בפריסייל ובבנייה.",
+          "הפלטפורמה המובילה לחיפוש פרויקטי בנייה חדשים בישראל. דירות חדשות, בתים ווילות בפריסייל ובבנייה. | The leading platform for finding new construction projects across Israel.",
       },
+      // Open Graph
+      { property: "og:title", content: "MLS Israel — New Construction Projects in Israel" },
+      { property: "og:description", content: "Browse new apartments, houses, and villas in new developments across Israel. Prices, floor plans, handover dates, and direct agent contact." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://mls-israel.ctonew.app" },
+      { property: "og:image", content: "https://mls-israel.ctonew.app/og-image.png" },
+      { property: "og:site_name", content: "MLS Israel" },
+      { property: "og:locale", content: "he_IL" },
+      // Twitter Card
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "MLS Israel — New Construction Projects in Israel" },
+      { name: "twitter:description", content: "Browse new apartments, houses, and villas in new developments across Israel. Prices, floor plans, handover dates, and direct agent contact." },
+      // Canonical
+      { name: "robots", content: "index, follow" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -38,6 +52,10 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap",
       },
+      // hreflang
+      { rel: "alternate", hrefLang: "he", href: "https://mls-israel.ctonew.app" },
+      { rel: "alternate", hrefLang: "en", href: "https://mls-israel.ctonew.app" },
+      { rel: "canonical", href: "https://mls-israel.ctonew.app" },
     ],
   }),
   notFoundComponent: () => {
@@ -81,6 +99,26 @@ function RootDocument({ children }: { children: ReactNode }) {
                 document.documentElement.lang = lang;
               })();
             `,
+          }}
+        />
+        {/* JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "RealEstateListing",
+              "name": "MLS Israel",
+              "description": "הפלטפורמה המובילה לחיפוש פרויקטי בנייה חדשים בישראל. דירות חדשות, בתים ווילות בפריסייל ובבנייה.",
+              "url": "https://mls-israel.ctonew.app",
+              "areaServed": { "@type": "Country", "name": "IL" },
+              "inLanguage": ["he", "en"],
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://mls-israel.ctonew.app/?city={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            }),
           }}
         />
       </head>

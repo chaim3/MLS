@@ -3,7 +3,21 @@ import { useTranslate } from "~/lib/useTranslate";
 import { LangSwitcher } from "~/components/LangSwitcher";
 import { useState } from "react";
 export const Route = createFileRoute("/projects/$id")({
+  head: (ctx) => {
+    const project = ctx.loaderData as any;
+    if (!project) return {};
+    return {
+      meta: [
+        { title: project.name + " - MLS Israel" },
+        { name: "description", content: project.description_he || project.description || "" },
+        { property: "og:title", content: project.name + " - MLS Israel" },
+        { property: "og:description", content: project.description_en || project.description || "" },
+        { property: "og:url", content: "https://mls-israel.ctonew.app/projects/" + project.id },
+      ],
+    };
+  },
   loader: async ({ params }) => {
+
     const base = typeof window !== 'undefined' ? '' : 'http://localhost:3000';
     const res = await fetch(`${base}/api/public/projects?id=${params.id}`);
     if (!res.ok) return null;
