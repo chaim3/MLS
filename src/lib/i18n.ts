@@ -118,6 +118,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "dashboard.leads": "פניות",
     "dashboard.logout": "התנתק",
     "dashboard.save": "שמור פרויקט",
+    "dashboard.new": "חדשים",
     "dashboard.newProjectTitle": "פרויקט חדש",
     "dashboard.editProjectTitle": "עריכת פרויקט",
     "dashboard.projectName": "שם פרויקט *",
@@ -140,6 +141,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     "dashboard.uploadPhoto": "העלאת תמונת פרופיל",
     "dashboard.uploadProjectPhoto": "העלאת תמונה",
     "dashboard.photoHint": "JPEG, PNG, WebP או GIF. גודל מקסימלי 5MB",
+
+    // Leads status
+    "leads.status.new": "חדשה",
+    "leads.status.contacted": "נוצר קשר",
+    "leads.status.in_progress": "בטיפול",
+    "leads.status.completed": "הושלם",
 
     // Language
     "lang.he": "עברית",
@@ -259,6 +266,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     "dashboard.leads": "Leads",
     "dashboard.logout": "Logout",
     "dashboard.save": "Save Profile",
+    "dashboard.new": "new",
     "dashboard.saveProject": "Save Project",
     "dashboard.newProjectTitle": "New Project",
     "dashboard.editProjectTitle": "Edit Project",
@@ -282,6 +290,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     "dashboard.uploadPhoto": "Upload Profile Photo",
     "dashboard.uploadProjectPhoto": "Upload Photo",
     "dashboard.photoHint": "JPEG, PNG, WebP or GIF. Max size 5MB",
+
+    // Leads status
+    "leads.status.new": "New",
+    "leads.status.contacted": "Contacted",
+    "leads.status.in_progress": "In Progress",
+    "leads.status.completed": "Completed",
 
     // Language
     "lang.he": "עברית",

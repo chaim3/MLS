@@ -444,7 +444,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); descLocked.current = true; setShowDesc(true); }}
             className="mt-3 w-full text-left text-sm leading-relaxed text-gray-600 line-clamp-3 hover:text-blue-600 transition"
           >
-            {project.description}
+            {lang === "he" ? (project as any).description_he || project.description : (project as any).description_en || project.description}
           </button>
         )}
 
@@ -499,7 +499,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
               </button>
             </div>
             <p className="whitespace-pre-line text-sm leading-relaxed text-gray-700">
-              {project.description}
+              {lang === "he" ? (project as any).description_he || project.description : (project as any).description_en || project.description}
             </p>
           </div>
         </div>

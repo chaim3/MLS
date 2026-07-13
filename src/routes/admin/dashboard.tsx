@@ -498,8 +498,12 @@ function AdminDashboard() {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Description</label>
-                <textarea name="description" rows={2} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Project description..." />
+                <label className="mb-1 block text-xs text-gray-400">תיאור (עברית)</label>
+                <textarea name="description_he" rows={2} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="תיאור הפרויקט בעברית..." />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">Description (English)</label>
+                <textarea name="description_en" rows={2} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Project description in English..." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -623,8 +627,12 @@ function AdminDashboard() {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Description</label>
-                <textarea name="description" rows={3} defaultValue={editingProject.description} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                <label className="mb-1 block text-xs text-gray-400">תיאור (עברית)</label>
+                <textarea name="description_he" rows={3} defaultValue={editingProject.description_he || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">Description (English)</label>
+                <textarea name="description_en" rows={3} defaultValue={editingProject.description_en || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

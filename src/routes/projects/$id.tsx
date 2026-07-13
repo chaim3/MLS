@@ -173,7 +173,7 @@ function ProjectDetail() {
         {project.description && (
           <div className="mb-8 rounded-2xl bg-white p-6 shadow-sm">
             <h2 className="mb-3 text-xl font-bold">{t("project.description")}</h2>
-            <p className="whitespace-pre-line leading-relaxed text-gray-700">{project.description}</p>
+            <p className="whitespace-pre-line leading-relaxed text-gray-700">{lang === "he" ? project.description_he || project.description : project.description_en || project.description}</p>
           </div>
         )}
 
