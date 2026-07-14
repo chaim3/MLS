@@ -27,7 +27,7 @@ export const Route = createRootRoute({
       { property: "og:description", content: "Browse new apartments, houses, and villas in new developments across Israel. Prices, floor plans, handover dates, and direct agent contact." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://mls-israel.ctonew.app" },
-      { property: "og:image", content: "https://mls-israel.ctonew.app/og-image.png" },
+      { property: "og:image", content: "https://mls-israel.ctonew.app/og-image.svg" },
       { property: "og:site_name", content: "MLS Israel" },
       { property: "og:locale", content: "he_IL" },
       // Twitter Card
@@ -56,6 +56,11 @@ export const Route = createRootRoute({
       { rel: "alternate", hrefLang: "he", href: "https://mls-israel.ctonew.app" },
       { rel: "alternate", hrefLang: "en", href: "https://mls-israel.ctonew.app" },
       { rel: "canonical", href: "https://mls-israel.ctonew.app" },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "apple-touch-icon", href: "/favicon.svg" },
+    ],
+    scripts: [
+      ...(process.env.UMAMI_WEBSITE_ID ? [{ defer: true as const, src: "https://cloud.umami.is/script.js", "data-website-id": process.env.UMAMI_WEBSITE_ID }] : []),
     ],
   }),
   notFoundComponent: () => {

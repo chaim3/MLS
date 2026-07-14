@@ -64,6 +64,8 @@ function getDb(): Database {
   try { _db.exec("ALTER TABLE leads ADD COLUMN assigned_agent_id TEXT REFERENCES agents(id) ON DELETE SET NULL"); } catch (e) {}
   try { _db.exec("ALTER TABLE projects ADD COLUMN description_he TEXT NOT NULL DEFAULT ''"); } catch (e) {}
   try { _db.exec("ALTER TABLE projects ADD COLUMN description_en TEXT NOT NULL DEFAULT ''"); } catch (e) {}
+  try { _db.exec("CREATE TABLE IF NOT EXISTS blog_posts (id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, title TEXT NOT NULL, excerpt TEXT NOT NULL DEFAULT '', content_he TEXT NOT NULL DEFAULT '', content_en TEXT NOT NULL DEFAULT '', image_url TEXT NOT NULL DEFAULT '', published_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')))"); } catch (e) {}
+  try { _db.exec("CREATE INDEX IF NOT EXISTS idx_blog_slug ON blog_posts(slug)"); } catch (e) {}
   try {
     _db.exec(`CREATE TABLE IF NOT EXISTS project_agents (
       project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -100,6 +102,45 @@ function getDb(): Database {
       _db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run(projectId, demoId);
     }
   }
+
+  // Seed blog posts
+  const blogCount = _db.prepare("SELECT COUNT(*) as cnt FROM blog_posts").get() as any;
+  if (blogCount.cnt === 0) {
+    const posts = [
+      {
+        slug: "how-to-buy-a-new-apartment-in-israel",
+        title: "איך לקנות דירה חדשה בישראל",
+        excerpt: "מדריך מקיף לרכישת דירה חדשה מקבלן בישראל — משלב החיפוש ועד קבלת המפתחות.",
+        content_he: `<h2>שלב 1: הגדרת תקציב</h2><p>לפני שמתחילים לחפש דירה, חשוב להגדיר תקציב ריאלי. קחו בחשבון את המחיר הכולל כולל מע"מ, הוצאות רכישה, ושכר טרחת עורך דין.</p><h2>שלב 2: חיפוש פרויקטים</h2><p>השתמשו בפלטפורמה שלנו כדי למצוא פרויקטים חדשים בכל הארץ. סננו לפי עיר, טווח מחירים וסוג נכס.</p><h2>שלב 3: ביקור בפרויקט</h2><p>קבעו פגישה עם נציג המכירות ובקרו בפרויקט. בדקו את איכות הבנייה, המיקום, והתשתיות בסביבה.</p><h2>שלב 4: חתימת חוזה</h2><p>לאחר שבחרתם דירה, חתמו על חוזה רכישה. מומלץ לערב עורך דין המתמחה בנדל"ן.</p>`,
+        content_en: `<h2>Step 1: Define Your Budget</h2><p>Before starting your search, define a realistic budget. Consider the total price including VAT, purchase costs, and legal fees.</p><h2>Step 2: Search for Projects</h2><p>Use our platform to find new construction projects across Israel. Filter by city, price range, and property type.</p><h2>Step 3: Visit the Project</h2><p>Schedule a meeting with the sales representative and visit the project. Check the construction quality, location, and surrounding infrastructure.</p><h2>Step 4: Sign the Contract</h2><p>After choosing an apartment, sign a purchase agreement. It's recommended to involve a real estate attorney.</p>`,
+        image_url: "",
+        published_at: "2026-07-01",
+      },
+      {
+        slug: "new-construction-projects-tel-aviv-2026",
+        title: "פרויקטים חדשים בתל אביב 2026",
+        excerpt: "סקירה של פרויקטי הבנייה החדשים המבטיחים ביותר בתל אביב לשנת 2026.",
+        content_he: `<h2>מגדל היובל</h2><p>מגדל יוקרתי בן 35 קומות בלב תל אביב. דירות נוף לים, גג פנטהאוז, בריכה וחדר כושר. המחירים נעים בין 2.5 ל-5.8 מיליון ש"ח.</p><h2>פרויקטים נוספים</h2><p>תל אביב ממשיכה להתפתח עם פרויקטים חדשים בשכונות פלורנטין, נווה צדק והצפון הישן. המחירים נעים בין 2 ל-8 מיליון ש"ח בהתאם למיקום וגודל הדירה.</p>`,
+        content_en: `<h2>Migdal HaYovel</h2><p>A luxurious 35-story tower in the heart of Tel Aviv. Sea-view apartments, penthouse roof, swimming pool, and gym. Prices range from 2.5 to 5.8 million ILS.</p><h2>More Projects</h2><p>Tel Aviv continues to develop with new projects in Florentin, Neve Tzedek, and the Old North neighborhoods. Prices range from 2 to 8 million ILS depending on location and apartment size.</p>`,
+        image_url: "",
+        published_at: "2026-07-05",
+      },
+      {
+        slug: "guide-to-real-estate-investment-in-israel",
+        title: 'מדריך השקעות נדל"ן בישראל',
+        excerpt: 'כל מה שצריך לדעת על השקעה בנדל"ן ישראלי — יתרונות, סיכונים ואסטרטגיות.',
+        content_he: `<h2>למה להשקיע בנדל"ן ישראלי?</h2><p>שוק הנדל"ן הישראלי מציע הזדמנויות השקעה אטרקטיביות. הביקוש לדירות חדשות גבוה, המחירים יציבים, והתשואה על השקעה יכולה להיות משמעותית.</p><h2>סוגי השקעות</h2><p>השקעה בדירה חדשה בפריסייל מאפשרת כניסה במחיר נמוך יותר ועליית ערך עד למסירה. השקעה בנדל"ן מניב מספקת תזרים שוטף מהשכרה.</p><h2>טיפים למשקיעים</h2><p>בחרו מיקום אסטרטגי, בדקו את היזם והקבלן, השתמשו במינוף חכם, וגוון את ההשקעות.</p>`,
+        content_en: `<h2>Why Invest in Israeli Real Estate?</h2><p>The Israeli real estate market offers attractive investment opportunities. Demand for new apartments is high, prices are stable, and returns can be significant.</p><h2>Investment Types</h2><p>Investing in a new apartment during pre-sale allows entry at a lower price with value appreciation until handover. Income-generating real estate provides ongoing rental cash flow.</p><h2>Tips for Investors</h2><p>Choose strategic locations, research the developer and contractor, use smart leverage, and diversify your investments.</p>`,
+        image_url: "",
+        published_at: "2026-07-10",
+      },
+    ];
+    for (const post of posts) {
+      _db.prepare("INSERT INTO blog_posts (id, slug, title, excerpt, content_he, content_en, image_url, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+        .run(crypto.randomUUID?.() || uuid(), post.slug, post.title, post.excerpt, post.content_he, post.content_en, post.image_url, post.published_at);
+    }
+  }
+
   return _db;
 }
 
@@ -440,7 +481,8 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const projectsWithAgents = (projects as any[]).map(p => ({ ...p, agents: getProjectAgents(p.id) }));
     const agentsList = db.prepare("SELECT id, name, company, email, phone, photo_url, description, created_at FROM agents ORDER BY created_at DESC").all();
     const leads = db.prepare("SELECT l.*, p.name as project_name, a.name as assigned_agent_name FROM leads l JOIN projects p ON p.id = l.project_id LEFT JOIN agents a ON a.id = l.assigned_agent_id ORDER BY l.created_at DESC LIMIT 100").all();
-    return Response.json({ projects: projectsWithAgents, agents: agentsList, leads });
+    const blogPosts = db.prepare("SELECT * FROM blog_posts ORDER BY created_at DESC").all();
+    return Response.json({ projects: projectsWithAgents, agents: agentsList, leads, blogPosts });
   }
 
   // Admin: Delete project
@@ -669,6 +711,71 @@ async function apiHandler(req: Request): Promise<Response | null> {
     return Response.json(schema);
   }
 
+  // Blog: Public list
+  if (pathname === "/api/blog" && req.method === "GET") {
+    const url = new URL(req.url);
+    const slug = url.searchParams.get("slug");
+    const db = getDb();
+    if (slug) {
+      const post = db.prepare("SELECT * FROM blog_posts WHERE slug = ?").get(slug) as any;
+      if (!post) return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json({ post });
+    }
+    const posts = db.prepare("SELECT id, slug, title, excerpt, image_url, published_at, created_at FROM blog_posts WHERE published_at IS NOT NULL ORDER BY published_at DESC").all();
+    return Response.json({ posts });
+  }
+
+  // Blog: Admin CRUD (authenticated as admin)
+  if (pathname === "/api/admin/blog" && req.method === "GET") {
+    const cookie = req.headers.get("cookie") || "";
+    const match = cookie.match(/session=([^;]+)/);
+    const agent = match ? getSessionAgent(match[1]) : null;
+    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const db = getDb();
+    const posts = db.prepare("SELECT * FROM blog_posts ORDER BY created_at DESC").all();
+    return Response.json({ posts });
+  }
+
+  if (pathname === "/api/admin/blog/create" && req.method === "POST") {
+    const cookie = req.headers.get("cookie") || "";
+    const match = cookie.match(/session=([^;]+)/);
+    const agent = match ? getSessionAgent(match[1]) : null;
+    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const body = await req.json();
+    const { slug, title, excerpt, content_he, content_en, image_url, published_at } = body;
+    if (!slug || !title) return Response.json({ error: "slug and title are required" }, { status: 400 });
+    const db = getDb();
+    const id = uuid();
+    db.prepare("INSERT INTO blog_posts (id, slug, title, excerpt, content_he, content_en, image_url, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(id, slug, title, excerpt || "", content_he || "", content_en || "", image_url || "", published_at || null);
+    return Response.json({ success: true, id });
+  }
+
+  if (pathname === "/api/admin/blog/update" && req.method === "POST") {
+    const cookie = req.headers.get("cookie") || "";
+    const match = cookie.match(/session=([^;]+)/);
+    const agent = match ? getSessionAgent(match[1]) : null;
+    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const body = await req.json();
+    const { id, slug, title, excerpt, content_he, content_en, image_url, published_at } = body;
+    if (!id) return Response.json({ error: "id is required" }, { status: 400 });
+    const db = getDb();
+    db.prepare("UPDATE blog_posts SET slug = COALESCE(?, slug), title = COALESCE(?, title), excerpt = COALESCE(?, excerpt), content_he = COALESCE(?, content_he), content_en = COALESCE(?, content_en), image_url = COALESCE(?, image_url), published_at = COALESCE(?, published_at) WHERE id = ?")
+      .run(slug || null, title || null, excerpt || null, content_he || null, content_en || null, image_url || null, published_at || null, id);
+    return Response.json({ success: true });
+  }
+
+  if (pathname === "/api/admin/blog/delete" && req.method === "POST") {
+    const cookie = req.headers.get("cookie") || "";
+    const match = cookie.match(/session=([^;]+)/);
+    const agent = match ? getSessionAgent(match[1]) : null;
+    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const body = await req.json();
+    if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
+    getDb().prepare("DELETE FROM blog_posts WHERE id = ?").run(body.id);
+    return Response.json({ success: true });
+  }
+
   return null;
 }
 
@@ -697,16 +804,21 @@ for (let attempt = 1; ; attempt++) {
           const db = getDb();
           const projects = db.prepare("SELECT id, created_at FROM projects").all() as any[];
           const agents = db.prepare("SELECT id, created_at FROM agents").all() as any[];
+          const blogs = db.prepare("SELECT slug, published_at FROM blog_posts WHERE published_at IS NOT NULL").all() as any[];
           const now = new Date().toISOString().split("T")[0];
           let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
           xml += `  <url><loc>https://mls-israel.ctonew.app/</loc><lastmod>${now}</lastmod><priority>1.0</priority></url>\n`;
           for (const p of projects) {
-            const lastmod = p.updated_at ? p.updated_at.split(" ")[0] : now;
+            const lastmod = p.created_at ? p.created_at.split(" ")[0] : now;
             xml += `  <url><loc>https://mls-israel.ctonew.app/projects/${p.id}</loc><lastmod>${lastmod}</lastmod><priority>0.8</priority></url>\n`;
           }
           for (const a of agents) {
-            const lastmod = a.updated_at ? a.updated_at.split(" ")[0] : now;
+            const lastmod = a.created_at ? a.created_at.split(" ")[0] : now;
             xml += `  <url><loc>https://mls-israel.ctonew.app/agents/${a.id}</loc><lastmod>${lastmod}</lastmod><priority>0.5</priority></url>\n`;
+          }
+          for (const b of blogs) {
+            const lastmod = b.published_at ? b.published_at.split(" ")[0] : now;
+            xml += `  <url><loc>https://mls-israel.ctonew.app/blog/${b.slug}</loc><lastmod>${lastmod}</lastmod><priority>0.6</priority></url>\n`;
           }
           xml += `</urlset>`;
           return new Response(xml, { headers: { "Content-Type": "application/xml" } });

@@ -6,6 +6,7 @@ type AdminData = {
   projects: any[];
   agents: any[];
   leads: any[];
+  blogPosts: any[];
 };
 
 export const Route = createFileRoute("/admin/dashboard")({
@@ -15,9 +16,11 @@ export const Route = createFileRoute("/admin/dashboard")({
 function AdminDashboard() {
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"projects" | "agents" | "leads">("projects");
+  const [tab, setTab] = useState<"projects" | "agents" | "leads" | "blog">("projects");
   const [showAddProject, setShowAddProject] = useState(false);
   const [showAddAgent, setShowAddAgent] = useState(false);
+  const [showAddBlog, setShowAddBlog] = useState(false);
+  const [editingBlog, setEditingBlog] = useState<any | null>(null);
   const [editingProject, setEditingProject] = useState<any | null>(null);
   const [editingAgent, setEditingAgent] = useState<any | null>(null);
   const [viewingAgent, setViewingAgent] = useState<any | null>(null);
@@ -232,12 +235,16 @@ function AdminDashboard() {
               <p className="text-3xl font-bold text-green-400">{data.leads.length}</p>
               <p className="text-sm text-gray-400">Leads</p>
             </div>
+            <div className="rounded-xl bg-gray-800 p-4 text-center border border-gray-700">
+              <p className="text-3xl font-bold text-purple-400">{data.blogPosts?.length || 0}</p>
+              <p className="text-sm text-gray-400">Blog Posts</p>
+            </div>
           </div>
         )}
 
         {/* Tab Navigation */}
         <div className="mb-4 flex gap-2">
-          {(["projects", "agents", "leads"] as const).map((t) => (
+          {(["projects", "agents", "leads", "blog"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -247,7 +254,7 @@ function AdminDashboard() {
                   : "bg-gray-800 text-gray-400 hover:bg-gray-700"
               }`}
             >
-              {t === "projects" ? "Projects" : t === "agents" ? "Agents" : "Leads"}
+              {t === "projects" ? "Projects" : t === "agents" ? "Agents" : t === "leads" ? "Leads" : "Blog"}
             </button>
           ))}
         </div>
@@ -477,6 +484,66 @@ function AdminDashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Blog Tab */}
+        {!loading && tab === "blog" && data && (
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm text-gray-400">{data.blogPosts?.length || 0} posts</span>
+              <button
+                onClick={() => { setShowAddBlog(true); setEditingBlog(null); setFormMsg(""); }}
+                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-gray-900 hover:bg-amber-500"
+              >
+                + New Post
+              </button>
+            </div>
+            <div className="overflow-x-auto rounded-xl border border-gray-700">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-800">
+                  <tr>
+                    <th className="px-4 py-3 text-right">Title</th>
+                    <th className="px-4 py-3 text-right">Slug</th>
+                    <th className="px-4 py-3 text-right">Published</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                  {(data.blogPosts || []).map((post: any) => (
+                    <tr key={post.id} className="hover:bg-gray-800">
+                      <td className="px-4 py-3 font-medium">{post.title}</td>
+                      <td className="px-4 py-3 text-gray-400">{post.slug}</td>
+                      <td className="px-4 py-3 text-gray-400">{post.published_at || "-"}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => { setEditingBlog(post); setShowAddBlog(true); setFormMsg(""); }}
+                            className="rounded bg-blue-900 px-2 py-1 text-xs text-blue-300 hover:bg-blue-800"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!confirm("Delete this post?")) return;
+                              await fetch("/api/admin/blog/delete", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ id: post.id }),
+                              });
+                              loadData();
+                            }}
+                            className="rounded bg-red-900 px-2 py-1 text-xs text-red-300 hover:bg-red-800"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </main>
@@ -804,6 +871,79 @@ function AdminDashboard() {
                 </div>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* Blog Post Modal */}
+      {showAddBlog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="w-full max-w-2xl rounded-2xl bg-gray-800 p-6 shadow-2xl border border-gray-700" style={{ maxHeight: "90vh", overflowY: "auto" }}>
+            <h2 className="mb-4 text-xl font-bold">{editingBlog ? "Edit Post" : "New Blog Post"}</h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setFormMsg("");
+                const fd = new FormData(e.currentTarget);
+                const body: Record<string, string> = {};
+                fd.forEach((v, k) => { body[k] = v as string });
+                if (editingBlog) body.id = editingBlog.id;
+                const url = editingBlog ? "/api/admin/blog/update" : "/api/admin/blog/create";
+                const res = await fetch(url, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(body),
+                });
+                const json = await res.json();
+                if (json.error) {
+                  setFormMsg(json.error);
+                } else {
+                  setShowAddBlog(false);
+                  setEditingBlog(null);
+                  setFormMsg("");
+                  loadData();
+                }
+              }}
+              className="space-y-3"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">Title *</label>
+                  <input name="title" defaultValue={editingBlog?.title || ""} required className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">Slug *</label>
+                  <input name="slug" defaultValue={editingBlog?.slug || ""} required className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="e.g. my-article-slug" />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">Excerpt / Summary</label>
+                <textarea name="excerpt" rows={2} defaultValue={editingBlog?.excerpt || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">Content (Hebrew)</label>
+                <textarea name="content_he" rows={6} defaultValue={editingBlog?.content_he || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white font-mono placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">Content (English)</label>
+                <textarea name="content_en" rows={6} defaultValue={editingBlog?.content_en || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white font-mono placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">Image URL</label>
+                  <input name="image_url" defaultValue={editingBlog?.image_url || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">Published Date (YYYY-MM-DD)</label>
+                  <input name="published_at" type="date" defaultValue={editingBlog?.published_at?.split(" ")[0] || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                </div>
+              </div>
+              {formMsg && <p className="text-sm text-red-400">{formMsg}</p>}
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => { setShowAddBlog(false); setEditingBlog(null); setFormMsg(""); }} className="rounded-lg bg-gray-600 px-4 py-2 text-sm text-white hover:bg-gray-500">Cancel</button>
+                <button type="submit" className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-gray-900 hover:bg-amber-500">{editingBlog ? "Save Changes" : "Create Post"}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
