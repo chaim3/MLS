@@ -99,6 +99,18 @@ function Home() {
             </Link>
             <nav className="flex items-center gap-2 sm:gap-3">
               <LangSwitcher />
+              <Link
+                to="/about"
+                className="hidden rounded-lg bg-white/20 px-4 py-2 text-sm font-medium transition hover:bg-white/30 sm:inline-block"
+              >
+                About
+              </Link>
+              <Link
+                to="/blog"
+                className="hidden rounded-lg bg-white/20 px-4 py-2 text-sm font-medium transition hover:bg-white/30 sm:inline-block"
+              >
+                Blog
+              </Link>
               <button 
                 onClick={() => setShowMobileSearch(!showMobileSearch)}
                 className="rounded-lg bg-white/20 p-2 transition hover:bg-white/30 sm:hidden"
@@ -291,6 +303,8 @@ function Home() {
                 <li><a href="/" className="transition hover:text-blue-600">Browse Projects</a></li>
                 <li><a href="/" className="transition hover:text-blue-600">Search by City</a></li>
                 <li><a href="/" className="transition hover:text-blue-600">Featured Projects</a></li>
+                <li><Link to="/blog" className="transition hover:text-blue-600">Blog & Guides</Link></li>
+                <li><Link to="/about" className="transition hover:text-blue-600">About Us</Link></li>
               </ul>
             </div>
             <div>
