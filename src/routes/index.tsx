@@ -313,7 +313,7 @@ function Home() {
             <p>{t("site.name")} © 2026 — {t("site.tagline")}</p>
             <div className="mt-2 flex items-center justify-center gap-4">
               <Link to="/privacy" className="transition hover:text-blue-600">Privacy Policy</Link>
-              <Link to="/tos" className="transition hover:text-blue-600">Terms of Service</Link>
+              <Link to="/terms" className="transition hover:text-blue-600">Terms of Service</Link>
             </div>
           </div>
         </div>

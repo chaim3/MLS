@@ -142,7 +142,7 @@ function PrivacyPage() {
           <p className="text-sm text-gray-500">{t("site.name")} © 2026</p>
           <div className="flex gap-4">
             <Link to="/privacy" className="text-sm text-gray-500 transition hover:text-blue-600">{isRtl ? "פרטיות" : "Privacy"}</Link>
-            <Link to="/tos" className="text-sm text-gray-500 transition hover:text-blue-600">{isRtl ? "תנאים" : "Terms"}</Link>
+            <Link to="/terms" className="text-sm text-gray-500 transition hover:text-blue-600">{isRtl ? "תנאים" : "Terms"}</Link>
             <Link to="/" className="text-sm text-gray-500 transition hover:text-blue-600">{isRtl ? "דף הבית" : "Home"}</Link>
           </div>
         </div>
