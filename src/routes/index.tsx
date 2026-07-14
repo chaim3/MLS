@@ -311,6 +311,10 @@ function Home() {
           </div>
           <div className="mt-8 border-t border-gray-200 pt-6 text-center text-sm text-gray-400">
             <p>{t("site.name")} © 2026 — {t("site.tagline")}</p>
+            <div className="mt-2 flex items-center justify-center gap-4">
+              <Link to="/privacy" className="transition hover:text-blue-600">Privacy Policy</Link>
+              <Link to="/terms" className="transition hover:text-blue-600">Terms of Service</Link>
+            </div>
           </div>
         </div>
       </footer>
