@@ -154,6 +154,12 @@ function Home() {
                 {t("agent.login")}
               </Link>
               <Link
+                to="/admin/login"
+                className="hidden rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white sm:inline-block"
+              >
+                Admin
+              </Link>
+              <Link
                 to="/agent/signup"
                 className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-blue-700 shadow-lg transition hover:bg-blue-50 hover:shadow-xl"
               >
@@ -390,6 +396,7 @@ function Home() {
               <ul className="space-y-2 text-sm text-gray-500">
                 <li><Link to="/agent/signup" className="transition hover:text-blue-600">List Your Project</Link></li>
                 <li><Link to="/agent/login" className="transition hover:text-blue-600">Agent Dashboard</Link></li>
+                  <li><Link to="/admin/login" className="transition hover:text-blue-600">Admin</Link></li>
                 <li><a href="/" className="transition hover:text-blue-600">Premium Plans</a></li>
               </ul>
             </div>
