@@ -450,30 +450,28 @@ async function apiHandler(req: Request): Promise<Response | null> {
   }
 
   // Admin: Login
+  function checkAdminAuth(req: Request): boolean {
+  const cookie = req.headers.get("cookie") || "";
+  return cookie.includes("admin_token=logged_in");
+}
+
+// Admin: Login (password-only, env var ADMIN_PASSWORD)
   if (pathname === "/api/admin/login" && req.method === "POST") {
     const body = await req.json();
-    const { email, password } = body;
-    if (email === "chaim@bienenfeld.org" && password === "admin123") {
-      const db = getDb();
-      const agent = db.prepare("SELECT * FROM agents WHERE email = ?").get(email) as any;
-      if (agent && bcrypt.compareSync(password, agent.password)) {
-        const sessionId = uuid();
-        db.prepare("INSERT INTO sessions (id, agent_id) VALUES (?, ?)").run(sessionId, agent.id);
-        return Response.json(
-          { success: true },
-          { headers: { "Set-Cookie": `session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800` } }
-        );
-      }
+    const { password } = body;
+    const adminPw = process.env.ADMIN_PASSWORD || "admin123";
+    if (password === adminPw) {
+      return Response.json(
+        { success: true },
+        { headers: { "Set-Cookie": `admin_token=logged_in; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800` } }
+      );
     }
-    return Response.json({ error: "אימייל או סיסמה שגויים" }, { status: 401 });
+    return Response.json({ error: "סיסמה שגויה" }, { status: 401 });
   }
 
   // Admin: Dashboard
   if (pathname === "/api/admin/dashboard" && req.method === "GET") {
-    const cookie = req.headers.get("cookie") || "";
-    const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") {
+    if (!checkAdminAuth(req)) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
     const db = getDb();
@@ -482,15 +480,23 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const agentsList = db.prepare("SELECT id, name, company, email, phone, photo_url, description, created_at FROM agents ORDER BY created_at DESC").all();
     const leads = db.prepare("SELECT l.*, p.name as project_name, a.name as assigned_agent_name FROM leads l JOIN projects p ON p.id = l.project_id LEFT JOIN agents a ON a.id = l.assigned_agent_id ORDER BY l.created_at DESC LIMIT 100").all();
     const blogPosts = db.prepare("SELECT * FROM blog_posts ORDER BY created_at DESC").all();
-    return Response.json({ projects: projectsWithAgents, agents: agentsList, leads, blogPosts });
+
+    // Stats
+    const stats = {
+      totalProjects: (projects as any[]).length,
+      totalAgents: (agentsList as any[]).length,
+      totalLeads: (leads as any[]).length,
+      preSale: (projects as any[]).filter(p => p.status === "pre-sale").length,
+      underConstruction: (projects as any[]).filter(p => p.status === "under-construction").length,
+      ready: (projects as any[]).filter(p => p.status === "ready").length,
+    };
+
+    return Response.json({ projects: projectsWithAgents, agents: agentsList, leads, blogPosts, stats });
   }
 
   // Admin: Delete project
   if (pathname === "/api/admin/projects/delete" && req.method === "POST") {
-    const cookie = req.headers.get("cookie") || "";
-    const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     getDb().prepare("DELETE FROM projects WHERE id = ?").run(body.id);
     return Response.json({ success: true });
@@ -498,10 +504,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
 
   // Admin: Delete agent
   if (pathname === "/api/admin/agents/delete" && req.method === "POST") {
-    const cookie = req.headers.get("cookie") || "";
-    const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     getDb().prepare("DELETE FROM agents WHERE id = ? AND email != 'chaim@bienenfeld.org'").run(body.id);
     return Response.json({ success: true });
@@ -509,10 +512,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
 
   // Admin: Toggle featured
   if (pathname === "/api/admin/projects/featured" && req.method === "POST") {
-    const cookie = req.headers.get("cookie") || "";
-    const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const project = getDb().prepare("SELECT featured FROM projects WHERE id = ?").get(body.id) as any;
     if (!project) return Response.json({ error: "Not found" }, { status: 404 });
@@ -523,10 +523,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
 
   // Admin: Create project (with duplicate check)
   if (pathname === "/api/admin/projects/create" && req.method === "POST") {
-    const cookie = req.headers.get("cookie") || "";
-    const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const { name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url, agent_id } = body;
     if (!name || !city) return Response.json({ error: "Name and city are required" }, { status: 400 });
@@ -541,17 +538,14 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const photoUrlsJson = photo_url ? JSON.stringify([photo_url]) : "[]";
     db.prepare("INSERT INTO projects (id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_urls, website_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
       .run(id, name, description || "", description_he || "", description_en || "", city, address || "", price_min ? parseInt(price_min) : 0, price_max ? parseInt(price_max) : 0, status || "pre-sale", handover_date || "", photoUrlsJson, website_url || "");
-    const targetAgentId = agent_id || agent.id;
+    const targetAgentId = agent_id || "admin-001";
     db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run(id, targetAgentId);
     return Response.json({ success: true, id });
   }
 
   // Admin: Create agent
   if (pathname === "/api/admin/agents/create" && req.method === "POST") {
-    const cookie = req.headers.get("cookie") || "";
-    const match = cookie.match(/session=([^;]+)/);
-    const admin = match ? getSessionAgent(match[1]) : null;
-    if (!admin || admin.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const { name, email, password, company, phone, description } = body;
     if (!name || !email || !password) return Response.json({ error: "Name, email, and password are required" }, { status: 400 });
@@ -570,7 +564,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
     const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const { id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url } = body;
     if (!id) return Response.json({ error: "Project ID is required" }, { status: 400 });
@@ -584,10 +578,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
 
   // Admin: Update agent
   if (pathname === "/api/admin/agents/update" && req.method === "POST") {
-    const cookie = req.headers.get("cookie") || "";
-    const match = cookie.match(/session=([^;]+)/);
-    const admin = match ? getSessionAgent(match[1]) : null;
-    if (!admin || admin.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const { id, name, email, password, company, phone, description } = body;
     if (!id) return Response.json({ error: "Agent ID is required" }, { status: 400 });
@@ -730,7 +721,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
     const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const db = getDb();
     const posts = db.prepare("SELECT * FROM blog_posts ORDER BY created_at DESC").all();
     return Response.json({ posts });
@@ -740,7 +731,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
     const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const { slug, title, excerpt, content_he, content_en, image_url, published_at } = body;
     if (!slug || !title) return Response.json({ error: "slug and title are required" }, { status: 400 });
@@ -755,7 +746,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
     const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const { id, slug, title, excerpt, content_he, content_en, image_url, published_at } = body;
     if (!id) return Response.json({ error: "id is required" }, { status: 400 });
@@ -769,7 +760,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
     const agent = match ? getSessionAgent(match[1]) : null;
-    if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
     getDb().prepare("DELETE FROM blog_posts WHERE id = ?").run(body.id);
