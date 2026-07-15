@@ -35,6 +35,7 @@ function getDb(): Database {
   )`);
   _db.exec(`CREATE TABLE IF NOT EXISTS projects (
     id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', city TEXT NOT NULL,
+    city_en TEXT NOT NULL DEFAULT '',
     address TEXT NOT NULL DEFAULT '', lat REAL NOT NULL DEFAULT 0, lng REAL NOT NULL DEFAULT 0,
     property_types TEXT NOT NULL DEFAULT '[]', price_min INTEGER NOT NULL DEFAULT 0,
     price_max INTEGER NOT NULL DEFAULT 0, unit_count INTEGER NOT NULL DEFAULT 0,
@@ -64,6 +65,12 @@ function getDb(): Database {
   try { _db.exec("ALTER TABLE leads ADD COLUMN assigned_agent_id TEXT REFERENCES agents(id) ON DELETE SET NULL"); } catch (e) {}
   try { _db.exec("ALTER TABLE projects ADD COLUMN description_he TEXT NOT NULL DEFAULT ''"); } catch (e) {}
   try { _db.exec("ALTER TABLE projects ADD COLUMN description_en TEXT NOT NULL DEFAULT ''"); } catch (e) {}
+  try { _db.exec("ALTER TABLE projects ADD COLUMN city_en TEXT NOT NULL DEFAULT ''"); } catch (e) {}
+  // Seed city_en for existing rows
+  try { _db.exec(`UPDATE projects SET city_en = 'Tel Aviv' WHERE city = 'תל אביב' AND city_en = ''`); } catch (e) {}
+  try { _db.exec(`UPDATE projects SET city_en = 'Haifa' WHERE city = 'חיפה' AND city_en = ''`); } catch (e) {}
+  try { _db.exec("UPDATE projects SET city_en = 'Givat Ze''ev' WHERE city = 'givat ze''ev' AND city_en = ''"); } catch (e) {}
+  try { _db.exec(`UPDATE projects SET city_en = 'Carmay HaNadiv' WHERE city = 'CARMAY-HANADIV' AND city_en = ''`); } catch (e) {}
   try { _db.exec("CREATE TABLE IF NOT EXISTS blog_posts (id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, title TEXT NOT NULL, excerpt TEXT NOT NULL DEFAULT '', content_he TEXT NOT NULL DEFAULT '', content_en TEXT NOT NULL DEFAULT '', image_url TEXT NOT NULL DEFAULT '', published_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')))"); } catch (e) {}
   try { _db.exec("CREATE INDEX IF NOT EXISTS idx_blog_slug ON blog_posts(slug)"); } catch (e) {}
   try {
@@ -91,14 +98,15 @@ function getDb(): Database {
       .run(demoId, "ישראל ישראלי", "יזמות ובנייה בע״מ", "info@forgeoneconsulting.com", "03-5555555", bcrypt.hashSync("demo123", 10), "סוכן נדל״ן מנוסה עם 15 שנות ניסיון בליווי רוכשים בפרויקטים חדשים ברחבי הארץ.");
 
     const demoProjects = [
-      { name: "מגדל היובל", city: "תל אביב", address: "רחוב היובל 15", types: ["דירה", "דופלקס"], priceMin: 2500000, priceMax: 5800000, units: 120, handover: "רבעון 3 2026", status: "under-construction", desc: "מגדל יוקרתי בן 35 קומות בלב תל אביב. דירות נוף לים, גג פנטהאוז, בריכה וחדר כושר.", descEn: "A luxurious 35-story tower in the heart of Tel Aviv. Sea-view apartments, penthouse roof, swimming pool, and gym.", featured: 1, website: "https://migdal-hayovel.co.il" },
-      { name: "נופי כרמל", city: "חיפה", address: "דרך הים 8", types: ["דירה", "בית"], priceMin: 1800000, priceMax: 3500000, units: 85, handover: "רבעון 1 2027", status: "pre-sale", desc: "שכונת יוקרה על מורדות הכרמל עם נוף פנורמי למפרץ. גינות פרטיות וחניה תת קרקעית.", descEn: "A luxury neighborhood on the Carmel slopes with panoramic views of the bay. Private gardens and underground parking.", featured: 1, website: "https://nof-carmel.co.il" },
+      { name: "מגדל היובל", city: "תל אביב", cityEn: "Tel Aviv", address: "רחוב היובל 15", types: ["דירה", "דופלקס"], priceMin: 2500000, priceMax: 5800000, units: 120, handover: "רבעון 3 2026", status: "under-construction", desc: "מגדל יוקרתי בן 35 קומות בלב תל אביב. דירות נוף לים, גג פנטהאוז, בריכה וחדר כושר.", descEn: "A luxurious 35-story tower in the heart of Tel Aviv. Sea-view apartments, penthouse roof, swimming pool, and gym.", featured: 1, website: "https://migdal-hayovel.co.il" },
+      { name: "נופי כרמל", city: "חיפה", cityEn: "Haifa", address: "דרך הים 8", types: ["דירה", "בית"], priceMin: 1800000, priceMax: 3500000, units: 85, handover: "רבעון 1 2027", status: "pre-sale", desc: "שכונת יוקרה על מורדות הכרמל עם נוף פנורמי למפרץ. גינות פרטיות וחניה תת קרקעית.", descEn: "A luxury neighborhood on the Carmel slopes with panoramic views of the bay. Private gardens and underground parking.", featured: 1, website: "https://nof-carmel.co.il" },
     ];
 
     for (const p of demoProjects) {
       const projectId = uuid();
-      _db.prepare(`INSERT INTO projects (id, name, description, description_he, description_en, city, address, property_types, price_min, price_max, unit_count, handover_date, status, featured, website_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(projectId, p.name, p.desc, p.desc, p.descEn, p.city, p.address, JSON.stringify(p.types), p.priceMin, p.priceMax, p.units, p.handover, p.status, p.featured, p.website);
+      const cityEn = p.cityEn || "";
+      _db.prepare(`INSERT INTO projects (id, name, description, description_he, description_en, city, city_en, address, property_types, price_min, price_max, unit_count, handover_date, status, featured, website_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(projectId, p.name, p.desc, p.desc, p.descEn, p.city, cityEn, p.address, JSON.stringify(p.types), p.priceMin, p.priceMax, p.units, p.handover, p.status, p.featured, p.website);
       _db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run(projectId, demoId);
     }
   }
@@ -224,12 +232,12 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (id) {
-      const project = db.prepare("SELECT id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, featured, created_at, updated_at FROM projects WHERE id = ?").get(id) as any;
+      const project = db.prepare("SELECT id, name, description, description_he, description_en, city, city_en, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, featured, created_at, updated_at FROM projects WHERE id = ?").get(id) as any;
       if (!project) return Response.json({ error: "Not found" }, { status: 404 });
       project.agents = getProjectAgents(project.id);
       return Response.json({ project });
     }
-    const projects = db.prepare("SELECT id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, featured, created_at, updated_at FROM projects ORDER BY featured DESC, created_at DESC").all();
+    const projects = db.prepare("SELECT id, name, description, description_he, description_en, city, city_en, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, featured, created_at, updated_at FROM projects ORDER BY featured DESC, created_at DESC").all();
     const result = (projects as any[]).map(p => ({
       ...p,
       agents: getProjectAgents(p.id),
@@ -279,7 +287,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     if (!agent) return Response.json({ error: "לא מחובר" }, { status: 401 });
 
     const body = await req.json();
-    const { id, name, description, description_he, description_en, city, address, lat, lng, propertyTypes, priceMin, priceMax, unitCount, handoverDate, status, photoUrls, floorPlanUrls, websiteUrl } = body;
+    const { id, name, description, description_he, description_en, city, cityEn, address, lat, lng, propertyTypes, priceMin, priceMax, unitCount, handoverDate, status, photoUrls, floorPlanUrls, websiteUrl } = body;
     if (!name || !city) return Response.json({ error: "שם ועיר נדרשים" }, { status: 400 });
 
     const db = getDb();
@@ -287,8 +295,8 @@ async function apiHandler(req: Request): Promise<Response | null> {
       // Check user is assigned to this project
       const rel = db.prepare("SELECT * FROM project_agents WHERE project_id = ? AND agent_id = ?").get(id, agent.id);
       if (!rel) return Response.json({ error: "Unauthorized" }, { status: 403 });
-      db.prepare(`UPDATE projects SET name=?, description=?, description_he=?, description_en=?, city=?, address=?, lat=?, lng=?, property_types=?, price_min=?, price_max=?, unit_count=?, handover_date=?, status=?, photo_urls=?, floor_plan_urls=?, website_url=?, updated_at=datetime('now') WHERE id=?`)
-        .run(name, description || "", description_he || "", description_en || "", city, address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin ?? 0, priceMax ?? 0, unitCount ?? 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "", id);
+      db.prepare(`UPDATE projects SET name=?, description=?, description_he=?, description_en=?, city=?, city_en=?, address=?, lat=?, lng=?, property_types=?, price_min=?, price_max=?, unit_count=?, handover_date=?, status=?, photo_urls=?, floor_plan_urls=?, website_url=?, updated_at=datetime('now') WHERE id=?`)
+        .run(name, description || "", description_he || "", description_en || "", city, cityEn || "", address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin ?? 0, priceMax ?? 0, unitCount ?? 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "", id);
       return Response.json({ success: true, id });
     } else {
       // Check for duplicate project by name + city
@@ -572,13 +580,13 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const agent = match ? getSessionAgent(match[1]) : null;
     if (!agent || agent.email !== "chaim@bienenfeld.org") return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    const { id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url } = body;
+    const { id, name, description, description_he, description_en, city, city_en, address, price_min, price_max, status, handover_date, photo_url, website_url } = body;
     if (!id) return Response.json({ error: "Project ID is required" }, { status: 400 });
     const db = getDb();
     if (!db.prepare("SELECT id FROM projects WHERE id = ?").get(id)) return Response.json({ error: "Not found" }, { status: 404 });
     const photoUrlsJson = photo_url ? JSON.stringify([photo_url]) : undefined;
-    db.prepare(`UPDATE projects SET name = COALESCE(?, name), description = COALESCE(?, description), description_he = COALESCE(?, description_he), description_en = COALESCE(?, description_en), city = COALESCE(?, city), address = COALESCE(?, address), price_min = COALESCE(?, price_min), price_max = COALESCE(?, price_max), status = COALESCE(?, status), handover_date = COALESCE(?, handover_date), photo_urls = COALESCE(?, photo_urls), website_url = COALESCE(?, website_url), updated_at = datetime('now') WHERE id = ?`)
-      .run(name || null, description || null, description_he || null, description_en || null, city || null, address || null, price_min ? parseInt(price_min) : null, price_max ? parseInt(price_max) : null, status || null, handover_date || null, photoUrlsJson || null, website_url || null, id);
+    db.prepare(`UPDATE projects SET name = COALESCE(?, name), description = COALESCE(?, description), description_he = COALESCE(?, description_he), description_en = COALESCE(?, description_en), city = COALESCE(?, city), city_en = COALESCE(?, city_en), address = COALESCE(?, address), price_min = COALESCE(?, price_min), price_max = COALESCE(?, price_max), status = COALESCE(?, status), handover_date = COALESCE(?, handover_date), photo_urls = COALESCE(?, photo_urls), website_url = COALESCE(?, website_url), updated_at = datetime('now') WHERE id = ?`)
+      .run(name || null, description || null, description_he || null, description_en || null, city || null, city_en || null, address || null, price_min ? parseInt(price_min) : null, price_max ? parseInt(price_max) : null, status || null, handover_date || null, photoUrlsJson || null, website_url || null, id);
     return Response.json({ success: true });
   }
 
@@ -685,7 +693,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
   // SEO: Schema.org JSON-LD
   if (pathname === "/api/seo/schema" && req.method === "GET") {
     const db = getDb();
-    const projects = db.prepare("SELECT id, name, description, city, price_min, price_max, updated_at FROM projects ORDER BY updated_at DESC LIMIT 50").all() as any[];
+    const projects = db.prepare("SELECT id, name, description, city, city_en, price_min, price_max, updated_at FROM projects ORDER BY updated_at DESC LIMIT 50").all() as any[];
     const schema = {
       "@context": "https://schema.org",
       "@type": "RealEstateListing",
@@ -717,7 +725,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const slug = url.searchParams.get("slug");
     const db = getDb();
     if (slug) {
-      const post = db.prepare("SELECT * FROM blog_posts WHERE slug = ?").get(slug) as any;
+      const post = db.prepare("SELECT *, title_he, title_en, excerpt_he, excerpt_en FROM blog_posts WHERE slug = ?").get(slug) as any;
       if (!post) return Response.json({ error: "Not found" }, { status: 404 });
       return Response.json({ post });
     }
