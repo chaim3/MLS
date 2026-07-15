@@ -53,26 +53,54 @@ function Home() {
   const serverProjects = Route.useLoaderData();
   const { t, lang } = useTranslate();
   const [projects, setProjects] = useState(serverProjects);
-  const [filters, setFilters] = useState({ city: "", type: "", minPrice: "", maxPrice: "" });
+  const [filters, setFilters] = useState({ city: "", type: "", status: "", minPrice: "", maxPrice: "" });
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
+  // Apply filters whenever filters change
+  useEffect(() => {
+    let filtered = [...serverProjects];
+    if (filters.city) filtered = filtered.filter((p) => p.city.includes(filters.city));
+    if (filters.type) filtered = filtered.filter((p) => JSON.parse(p.property_types).includes(filters.type));
+    if (filters.status) filtered = filtered.filter((p) => p.status === filters.status);
+    if (filters.minPrice) filtered = filtered.filter((p) => p.price_max >= Number(filters.minPrice));
+    if (filters.maxPrice) filtered = filtered.filter((p) => p.price_min <= Number(filters.maxPrice));
+    setProjects(filtered);
+
+    // Sync URL params (bookmarkable, no page reload)
+    const params = new URLSearchParams();
+    if (filters.city) params.set("city", filters.city);
+    if (filters.type) params.set("type", filters.type);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.minPrice) params.set("minPrice", filters.minPrice);
+    if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+    const qs = params.toString();
+    const newUrl = qs ? "/?" + qs : "/";
+    if (window.location.search !== (qs ? "?" + qs : "")) {
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, [filters.city, filters.type, filters.status, filters.minPrice, filters.maxPrice, serverProjects]);
+
+  // Read initial filters from URL on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const city = params.get("city") || "";
     const type = params.get("type") || "";
+    const status = params.get("status") || "";
     const minPrice = params.get("minPrice") || "";
     const maxPrice = params.get("maxPrice") || "";
-    setFilters({ city, type, minPrice, maxPrice });
-
-    if (city || type || minPrice || maxPrice) {
-      let filtered = [...serverProjects];
-      if (city) filtered = filtered.filter((p) => p.city.includes(city));
-      if (type) filtered = filtered.filter((p) => JSON.parse(p.property_types).includes(type));
-      if (minPrice) filtered = filtered.filter((p) => p.price_max >= Number(minPrice));
-      if (maxPrice) filtered = filtered.filter((p) => p.price_min <= Number(maxPrice));
-      setProjects(filtered);
-    }
+    setFilters({ city, type, status, minPrice, maxPrice });
   }, []);
+
+  const hasFilters = filters.city || filters.type || filters.status || filters.minPrice || filters.maxPrice;
+
+  const clearFilters = () => {
+    setFilters({ city: "", type: "", status: "", minPrice: "", maxPrice: "" });
+    window.history.replaceState(null, "", "/");
+  };
+
+  const updateFilter = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
   const cities = [...new Set(serverProjects.map((p) => p.city))];
 
@@ -149,23 +177,7 @@ function Home() {
           {/* Search Bar */}
           <div className="mx-auto mt-10 max-w-4xl">
             <form
-              method="GET"
-              action="/"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.currentTarget;
-                const params = new URLSearchParams();
-                const fd = new FormData(form);
-                const city = fd.get("city")?.toString() || "";
-                const type = fd.get("type")?.toString() || "";
-                const minPrice = fd.get("minPrice")?.toString() || "";
-                const maxPrice = fd.get("maxPrice")?.toString() || "";
-                if (city) params.set("city", city);
-                if (type) params.set("type", type);
-                if (minPrice) params.set("minPrice", minPrice);
-                if (maxPrice) params.set("maxPrice", maxPrice);
-                window.location.href = "/?" + params.toString();
-              }}
+              onSubmit={(e) => e.preventDefault()}
               className="mx-auto flex flex-wrap gap-2 rounded-2xl bg-white/10 p-2 backdrop-blur-md sm:flex-nowrap sm:gap-3 sm:p-3"
             >
               <div className="relative flex-1">
@@ -173,7 +185,7 @@ function Home() {
                   name="city"
                   list="cities"
                   value={filters.city}
-                  onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                  onChange={(e) => updateFilter("city", e.target.value)}
                   placeholder={t("search.city")}
                   className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200 backdrop-blur-sm transition focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 min-w-[140px]"
                 />
@@ -186,7 +198,7 @@ function Home() {
               <select
                 name="type"
                 value={filters.type}
-                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                onChange={(e) => updateFilter("type", e.target.value)}
                 className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white backdrop-blur-sm transition focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 min-w-[100px]"
               >
                 <option value="" className="text-gray-800">{t("search.allTypes")}</option>
@@ -195,11 +207,22 @@ function Home() {
                 <option value="וילה" className="text-gray-800">{t("search.villa")}</option>
                 <option value="דופלקס" className="text-gray-800">{t("search.duplex")}</option>
               </select>
+              <select
+                name="status"
+                value={filters.status}
+                onChange={(e) => updateFilter("status", e.target.value)}
+                className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white backdrop-blur-sm transition focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 min-w-[120px]"
+              >
+                <option value="" className="text-gray-800">{t("search.allStatuses")}</option>
+                <option value="pre-sale" className="text-gray-800">{t("status.pre-sale")}</option>
+                <option value="under-construction" className="text-gray-800">{t("status.under-construction")}</option>
+                <option value="ready" className="text-gray-800">{t("status.ready")}</option>
+              </select>
               <input
                 name="minPrice"
                 type="number"
                 value={filters.minPrice}
-                onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+                onChange={(e) => updateFilter("minPrice", e.target.value)}
                 placeholder={t("search.minPrice")}
                 className="w-28 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200 backdrop-blur-sm transition focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20"
               />
@@ -207,7 +230,7 @@ function Home() {
                 name="maxPrice"
                 type="number"
                 value={filters.maxPrice}
-                onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+                onChange={(e) => updateFilter("maxPrice", e.target.value)}
                 placeholder={t("search.maxPrice")}
                 className="w-28 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200 backdrop-blur-sm transition focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20"
               />
@@ -219,6 +242,61 @@ function Home() {
               </button>
             </form>
           </div>
+
+          {/* Mobile Search Panel */}
+          {showMobileSearch && (
+            <div className="mx-auto mt-3 max-w-4xl sm:hidden">
+              <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-md">
+                <div className="flex flex-col gap-3">
+                  <select
+                    value={filters.type}
+                    onChange={(e) => updateFilter("type", e.target.value)}
+                    className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white backdrop-blur-sm"
+                  >
+                    <option value="" className="text-gray-800">{t("search.allTypes")}</option>
+                    <option value="דירה" className="text-gray-800">{t("search.apartment")}</option>
+                    <option value="בית" className="text-gray-800">{t("search.house")}</option>
+                    <option value="וילה" className="text-gray-800">{t("search.villa")}</option>
+                    <option value="דופלקס" className="text-gray-800">{t("search.duplex")}</option>
+                  </select>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => updateFilter("status", e.target.value)}
+                    className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white backdrop-blur-sm"
+                  >
+                    <option value="" className="text-gray-800">{t("search.allStatuses")}</option>
+                    <option value="pre-sale" className="text-gray-800">{t("status.pre-sale")}</option>
+                    <option value="under-construction" className="text-gray-800">{t("status.under-construction")}</option>
+                    <option value="ready" className="text-gray-800">{t("status.ready")}</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      value={filters.minPrice}
+                      onChange={(e) => updateFilter("minPrice", e.target.value)}
+                      placeholder={t("search.minPrice")}
+                      className="flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200 backdrop-blur-sm"
+                    />
+                    <input
+                      type="number"
+                      value={filters.maxPrice}
+                      onChange={(e) => updateFilter("maxPrice", e.target.value)}
+                      placeholder={t("search.maxPrice")}
+                      className="flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200 backdrop-blur-sm"
+                    />
+                  </div>
+                  {hasFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="rounded-xl bg-white/20 px-4 py-2 text-sm text-white backdrop-blur-sm transition hover:bg-white/30"
+                    >
+                      ✕ Clear all filters
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Stats Bar */}
           <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-6 text-sm text-blue-100">
@@ -249,13 +327,13 @@ function Home() {
             <h2 className="text-2xl font-bold text-gray-900">{t("search.results") || "פרויקטים חדשים"}</h2>
             <p className="mt-1 text-sm text-gray-500">
               {projects.length} {t("stats.activeProjects")}
-              {filters.city || filters.type || filters.minPrice || filters.maxPrice ? ` — with filters applied` : ""}
+              {hasFilters ? ` — with filters applied` : ""}
             </p>
           </div>
           {/* Filter badge */}
-          {(filters.city || filters.type || filters.minPrice || filters.maxPrice) && (
+          {hasFilters && (
             <button
-              onClick={() => window.location.href = "/"}
+              onClick={clearFilters}
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50"
             >
               ✕ Clear filters
