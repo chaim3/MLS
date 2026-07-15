@@ -152,6 +152,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Language
     "lang.he": "עברית",
     "lang.en": "English",
+
+    // Cities
+    "city.tel_aviv": "תל אביב",
+    "city.haifa": "חיפה",
+    "city.givat_ze_ev": "גבעת זאב",
+    "city.carmay_hanadiv": "כרמי הנדיב",
   },
   en: {
     // Global
@@ -302,11 +308,46 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Language
     "lang.he": "עברית",
     "lang.en": "English",
+
+    // Cities
+    "city.tel_aviv": "Tel Aviv",
+    "city.haifa": "Haifa",
+    "city.givat_ze_ev": "Givat Ze'ev",
+    "city.carmay_hanadiv": "Carmay HaNadiv",
   },
 };
 
 export function t(key: string, lang: Lang): string {
   return translations[lang]?.[key] ?? translations.he[key] ?? key;
+}
+
+// Map DB city names to translation keys
+const cityToKey: Record<string, string> = {
+  "תל אביב": "city.tel_aviv",
+  "tel aviv": "city.tel_aviv",
+  "חיפה": "city.haifa",
+  "haifa": "city.haifa",
+  "גבעת זאב": "city.givat_ze_ev",
+  "givat ze'ev": "city.givat_ze_ev",
+  "כרמי הנדיב": "city.carmay_hanadiv",
+  "carmay hanadiv": "city.carmay_hanadiv",
+  "carmay-hanadiv": "city.carmay_hanadiv",
+};
+
+export function translateCity(city: string, lang: Lang): string {
+  const key = cityToKey[city.toLowerCase()];
+  if (key) return translations[lang]?.[key] ?? translations.he[key] ?? city;
+  return city;
+}
+
+export function getCitySearchableValues(city: string): string[] {
+  const key = cityToKey[city.toLowerCase()];
+  if (key) {
+    const he = translations.he[key] || city;
+    const en = translations.en[key] || city;
+    return [he, en, city].filter((v, i, a) => a.indexOf(v) === i);
+  }
+  return [city];
 }
 
 export function getLang(): Lang {
