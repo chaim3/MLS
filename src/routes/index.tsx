@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useTranslate } from "~/lib/useTranslate";
 import { LangSwitcher } from "~/components/LangSwitcher";
+
 import { useState, useEffect, useRef } from "react";
 
 export type Project = {
@@ -9,6 +10,7 @@ export type Project = {
   name: string;
   description: string;
   city: string;
+  city_en: string;
   address: string;
   lat: number;
   lng: number;
@@ -59,7 +61,10 @@ function Home() {
   // Apply filters whenever filters change
   useEffect(() => {
     let filtered = [...serverProjects];
-    if (filters.city) filtered = filtered.filter((p) => p.city.includes(filters.city));
+    if (filters.city) filtered = filtered.filter((p) => {
+      const searchable = [p.city, p.city_en].filter(Boolean);
+      return searchable.some((v) => v.toLowerCase().includes(filters.city.toLowerCase()));
+    });
     if (filters.type) filtered = filtered.filter((p) => JSON.parse(p.property_types).includes(filters.type));
     if (filters.status) filtered = filtered.filter((p) => p.status === filters.status);
     if (filters.minPrice) filtered = filtered.filter((p) => p.price_max >= Number(filters.minPrice));
@@ -103,6 +108,7 @@ function Home() {
   };
 
   const cities = [...new Set(serverProjects.map((p) => p.city))];
+  const displayCities = lang === "en" ? [...new Set(serverProjects.map((p) => p.city_en || p.city))] : [...new Set(serverProjects.map((p) => p.city))];
 
   return (
     <div className="min-h-dvh bg-white" dir={lang === "he" ? "rtl" : "ltr"}>
@@ -190,7 +196,7 @@ function Home() {
                   className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200 backdrop-blur-sm transition focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 min-w-[140px]"
                 />
                 <datalist id="cities">
-                  {cities.map((c) => (
+                  {displayCities.map((c) => (
                     <option key={c} value={c} />
                   ))}
                 </datalist>
@@ -489,7 +495,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            {project.city}
+            {lang === "en" ? (project.city_en || project.city) : project.city}
           </span>
         </p>
 

@@ -8,10 +8,10 @@ export const Route = createFileRoute("/blog/$slug")({
     if (!data) return {};
     return {
       meta: [
-        { title: (data.content_he || data.title) + " - MLS Israel Blog" },
-        { name: "description", content: data.excerpt || "" },
-        { property: "og:title", content: data.title + " - MLS Israel" },
-        { property: "og:description", content: data.excerpt || "" },
+        { title: (data.content_he || data.title_en || data.title) + " - MLS Israel Blog" },
+        { name: "description", content: data.excerpt_en || data.excerpt || "" },
+        { property: "og:title", content: (data.title_en || data.title) + " - MLS Israel" },
+        { property: "og:description", content: data.excerpt_en || data.excerpt || "" },
         { property: "og:url", content: "https://mls-israel.ctonew.app/blog/" + (data as any).slug },
       ],
     };

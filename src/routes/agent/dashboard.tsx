@@ -8,6 +8,7 @@ type Project = {
   name: string;
   description: string;
   city: string;
+  city_en: string;
   address: string;
   price_min: number;
   price_max: number;
@@ -67,6 +68,7 @@ function DashboardPage() {
   const [formData, setFormData] = useState({
     name: "",
     city: "",
+    city_en: "",
     description: "",
     descriptionHe: "",
     descriptionEn: "",
@@ -106,6 +108,7 @@ function DashboardPage() {
     setFormData({
       name: "",
       city: "",
+      city_en: "",
       description: "",
       descriptionHe: "",
       descriptionEn: "",
@@ -132,6 +135,7 @@ function DashboardPage() {
     setFormData({
       name: p.name,
       city: p.city,
+      city_en: (p as any).city_en || "",
       description: p.description || "",
       descriptionHe: (p as any).description_he || "",
       descriptionEn: (p as any).description_en || "",
@@ -170,6 +174,7 @@ function DashboardPage() {
       description_he: formData.descriptionHe,
       description_en: formData.descriptionEn,
       city: formData.city,
+      cityEn: formData.city_en,
       address: formData.address,
       propertyTypes: types,
       priceMin: parseInt(formData.priceMin) || undefined,
@@ -540,6 +545,21 @@ function DashboardPage() {
                           required
                           value={formData.city}
                           onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 pr-10 pl-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectCityEn")}</label>
+                      <div className="relative">
+                        <svg className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 001.75 1.97"/>
+                        </svg>
+                        <input
+                          name="city_en"
+                          placeholder={t("dashboard.projectCityEn")}
+                          value={formData.city_en || ""}
+                          onChange={(e) => setFormData({ ...formData, city_en: e.target.value })}
                           className="w-full rounded-xl border border-gray-200 pr-10 pl-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
                         />
                       </div>

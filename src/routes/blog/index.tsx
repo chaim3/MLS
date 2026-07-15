@@ -17,7 +17,7 @@ const getPosts = createServerFn({ method: "GET" }).handler(async () => {
   const { getDbAsync } = await import("~/lib/db");
   const db = await getDbAsync();
   const posts = db
-    .prepare("SELECT id, slug, title, excerpt, image_url, published_at, created_at FROM blog_posts WHERE published_at IS NOT NULL ORDER BY published_at DESC")
+    .prepare("SELECT id, slug, title, title_he, title_en, excerpt, excerpt_he, excerpt_en, image_url, published_at, created_at FROM blog_posts WHERE published_at IS NOT NULL ORDER BY published_at DESC")
     .all() as BlogPost[];
   return posts;
 });
@@ -91,10 +91,10 @@ function BlogIndex() {
                   <div className="flex flex-1 flex-col justify-center p-6">
                     <p className="text-sm text-gray-500">{post.published_at}</p>
                     <h2 className="mt-1 text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {post.title}
+                      {lang === "he" ? (post.title_he || post.title) : (post.title_en || post.title)}
                     </h2>
                     <p className="mt-2 text-sm leading-relaxed text-gray-600 line-clamp-3">
-                      {post.excerpt}
+                      {lang === "he" ? (post.excerpt_he || post.excerpt) : (post.excerpt_en || post.excerpt)}
                     </p>
                     <div className="mt-4 flex items-center gap-1 text-sm font-medium text-blue-600">
                       Read more
