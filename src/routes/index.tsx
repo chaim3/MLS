@@ -131,13 +131,13 @@ function Home() {
                 to="/about"
                 className="hidden rounded-lg bg-white/20 px-4 py-2 text-sm font-medium transition hover:bg-white/30 sm:inline-block"
               >
-                About
+                {t("nav.about")}
               </Link>
               <Link
                 to="/blog"
                 className="hidden rounded-lg bg-white/20 px-4 py-2 text-sm font-medium transition hover:bg-white/30 sm:inline-block"
               >
-                Blog
+                {t("nav.blog")}
               </Link>
               <button 
                 onClick={() => setShowMobileSearch(!showMobileSearch)}
@@ -152,12 +152,6 @@ function Home() {
                 className="hidden rounded-lg bg-white/20 px-4 py-2 text-sm font-medium transition hover:bg-white/30 sm:inline-block"
               >
                 {t("agent.login")}
-              </Link>
-              <Link
-                to="/admin/login"
-                className="hidden rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white sm:inline-block"
-              >
-                Admin
               </Link>
               <Link
                 to="/agent/signup"
@@ -387,8 +381,8 @@ function Home() {
                 <li><a href="/" className="transition hover:text-blue-600">Browse Projects</a></li>
                 <li><a href="/" className="transition hover:text-blue-600">Search by City</a></li>
                 <li><a href="/" className="transition hover:text-blue-600">Featured Projects</a></li>
-                <li><Link to="/blog" className="transition hover:text-blue-600">Blog & Guides</Link></li>
-                <li><Link to="/about" className="transition hover:text-blue-600">About Us</Link></li>
+                <li><Link to="/blog" className="transition hover:text-blue-600">{t("footer.blog")}</Link></li>
+                <li><Link to="/about" className="transition hover:text-blue-600">{t("footer.about")}</Link></li>
               </ul>
             </div>
             <div>
@@ -396,8 +390,7 @@ function Home() {
               <ul className="space-y-2 text-sm text-gray-500">
                 <li><Link to="/agent/signup" className="transition hover:text-blue-600">List Your Project</Link></li>
                 <li><Link to="/agent/login" className="transition hover:text-blue-600">Agent Dashboard</Link></li>
-                  <li><Link to="/admin/login" className="transition hover:text-blue-600">Admin</Link></li>
-                <li><a href="/" className="transition hover:text-blue-600">Premium Plans</a></li>
+                  <li><a href="/" className="transition hover:text-blue-600">Premium Plans</a></li>
               </ul>
             </div>
             <div>

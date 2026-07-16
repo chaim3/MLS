@@ -31,6 +31,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     "footer.forBuyers": "לקונים",
     "footer.forAgents": "יזמים",
     "footer.contact": "צור קשר",
+    "footer.blog": "בלוג ומדריכים",
+    "footer.about": "אודות",
+    "nav.about": "אודות",
+    "nav.blog": "בלוג",
 
     // Stats
     "stats.activeProjects": "פרויקטים פעילים",
@@ -181,6 +185,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     "footer.forBuyers": "Buyers",
     "footer.forAgents": "Developers",
     "footer.contact": "Contact",
+    "footer.blog": "Blog & Guides",
+    "footer.about": "About Us",
+    "nav.about": "About",
+    "nav.blog": "Blog",
 
     // Stats
     "stats.activeProjects": "Active Projects",
