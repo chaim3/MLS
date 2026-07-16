@@ -18,7 +18,7 @@ function AdminLoginPage() {
             </Link>
             <LangSwitcher />
           </div>
-          <p className="mt-2 text-gray-400">Owner Panel</p>
+          <p className="mt-2 text-gray-400">{t("admin.ownerPanel")}</p>
         </div>
         <form
           onSubmit={async (e) => {
@@ -34,7 +34,7 @@ function AdminLoginPage() {
             if (data.success) {
               window.location.href = "/admin/dashboard";
             } else {
-              setError(data.error || "Login failed");
+              setError(data.error || t("admin.loginFailed"));
             }
           }}
           className="rounded-2xl bg-gray-800 p-8 shadow-xl border border-gray-700"

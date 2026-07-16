@@ -378,9 +378,9 @@ function Home() {
             <div>
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-900">{t("footer.forBuyers") || "לקונים"}</h3>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><a href="/" className="transition hover:text-blue-600">Browse Projects</a></li>
-                <li><a href="/" className="transition hover:text-blue-600">Search by City</a></li>
-                <li><a href="/" className="transition hover:text-blue-600">Featured Projects</a></li>
+                <li><Link to="/" className="transition hover:text-blue-600">{t("footer.browseProjects")}</Link></li>
+                <li><Link to="/" className="transition hover:text-blue-600">{t("footer.searchByCity")}</Link></li>
+                <li><Link to="/" className="transition hover:text-blue-600">{t("footer.featuredProjects")}</Link></li>
                 <li><Link to="/blog" className="transition hover:text-blue-600">{t("footer.blog")}</Link></li>
                 <li><Link to="/about" className="transition hover:text-blue-600">{t("footer.about")}</Link></li>
               </ul>
@@ -388,24 +388,24 @@ function Home() {
             <div>
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-900">{t("footer.forAgents") || "יזמים"}</h3>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><Link to="/agent/signup" className="transition hover:text-blue-600">List Your Project</Link></li>
-                <li><Link to="/agent/login" className="transition hover:text-blue-600">Agent Dashboard</Link></li>
-                  <li><a href="/" className="transition hover:text-blue-600">Premium Plans</a></li>
+                <li><Link to="/agent/signup" className="transition hover:text-blue-600">{t("footer.listYourProject")}</Link></li>
+                <li><Link to="/agent/login" className="transition hover:text-blue-600">{t("footer.agentDashboard")}</Link></li>
+                  <li><Link to="/" className="transition hover:text-blue-600">{t("footer.premiumPlans")}</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-900">{t("footer.contact") || "צור קשר"}</h3>
               <ul className="space-y-2 text-sm text-gray-500">
                 <li>hello@example.com</li>
-                <li>Tel Aviv, Israel</li>
+                <li>{t("site.name")}</li>
               </ul>
             </div>
           </div>
           <div className="mt-8 border-t border-gray-200 pt-6 text-center text-sm text-gray-400">
             <p>{t("site.name")} © 2026 — {t("site.tagline")}</p>
             <div className="mt-2 flex items-center justify-center gap-4">
-              <Link to="/privacy" className="transition hover:text-blue-600">Privacy Policy</Link>
-              <Link to="/terms" className="transition hover:text-blue-600">Terms of Service</Link>
+              <Link to="/privacy" className="transition hover:text-blue-600">{t("footer.privacy")}</Link>
+              <Link to="/terms" className="transition hover:text-blue-600">{t("footer.terms")}</Link>
             </div>
           </div>
         </div>
