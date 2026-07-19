@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useTranslate } from "~/lib/useTranslate";
 import { LangSwitcher } from "~/components/LangSwitcher";
+import { translateCity, getCitySearchableValues } from "~/lib/i18n";
 import { useState, useEffect, useRef } from "react";
 
 export type Project = {
@@ -59,7 +60,10 @@ function Home() {
   // Apply filters whenever filters change
   useEffect(() => {
     let filtered = [...serverProjects];
-    if (filters.city) filtered = filtered.filter((p) => p.city.includes(filters.city));
+    if (filters.city) filtered = filtered.filter((p) => {
+      const values = getCitySearchableValues(p.city);
+      return values.some((v) => v.toLowerCase().includes(filters.city.toLowerCase()));
+    });
     if (filters.type) filtered = filtered.filter((p) => JSON.parse(p.property_types).includes(filters.type));
     if (filters.status) filtered = filtered.filter((p) => p.status === filters.status);
     if (filters.minPrice) filtered = filtered.filter((p) => p.price_max >= Number(filters.minPrice));
@@ -191,7 +195,7 @@ function Home() {
                 />
                 <datalist id="cities">
                   {cities.map((c) => (
-                    <option key={c} value={c} />
+                    <option key={c} value={translateCity(c, lang)} />
                   ))}
                 </datalist>
               </div>
@@ -489,7 +493,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            {project.city}
+            {translateCity(project.city, lang)}
           </span>
         </p>
 

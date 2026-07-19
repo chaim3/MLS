@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslate } from "~/lib/useTranslate";
+import { translateCity } from "~/lib/i18n";
 import { LangSwitcher } from "~/components/LangSwitcher";
 import { useState } from "react";
 export const Route = createFileRoute("/projects/$id")({
@@ -141,7 +142,7 @@ function ProjectDetail() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                {project.address}, {project.city}
+                {project.address}, {translateCity(project.city, lang)}
               </p>
             </div>
             <span className={"rounded-full border px-4 py-1.5 text-sm font-medium " + (statusColors[project.status] || "bg-gray-100 text-gray-700")}>
