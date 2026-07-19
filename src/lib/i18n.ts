@@ -31,6 +31,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     "footer.forBuyers": "לקונים",
     "footer.forAgents": "יזמים",
     "footer.contact": "צור קשר",
+    "footer.blog": "בלוג ומדריכים",
+    "footer.about": "אודות",
+    "nav.about": "אודות",
+    "nav.blog": "בלוג",
 
     // Stats
     "stats.activeProjects": "פרויקטים פעילים",
@@ -152,6 +156,39 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Language
     "lang.he": "עברית",
     "lang.en": "English",
+
+    // Footer
+    "footer.browseProjects": "דפדף בפרויקטים",
+    "footer.searchByCity": "חיפוש לפי עיר",
+    "footer.featuredProjects": "פרויקטים מומלצים",
+    "footer.listYourProject": "פרסם פרויקט",
+    "footer.agentDashboard": "לוח בקרה",
+    "footer.premiumPlans": "תוכניות פרימיום",
+    "footer.privacy": "מדיניות פרטיות",
+    "footer.terms": "תנאי שימוש",
+    "footer.forBuyers": "קונים",
+    "footer.forAgents": "יזמים",
+
+    // Admin
+    "admin.title": "לוח ניהול",
+    "admin.ownerPanel": "לוח בעלים",
+    "admin.loginFailed": "התחברות נכשלה",
+    "admin.adminDashboard": "לוח ניהול",
+    "admin.featured": "מומלץ",
+    "admin.basicInfo": "מידע בסיסי",
+    "admin.totalProjects": "סה\"כ פרויקטים",
+    "admin.totalAgents": "סה\"כ סוכנים",
+    "admin.totalLeads": "סה\"כ פניות",
+    "admin.preSale": "בפריסייל",
+    "admin.underConstruction": "בבנייה",
+    "admin.ready": "מוכן למסירה",
+
+    // Blog
+    "blog.title": "בלוג",
+    "blog.articleNotFound": "הכתבה לא נמצאה",
+
+    // Agent
+    "agent.loginFailed": "התחברות נכשלה",
   },
   en: {
     // Global
@@ -181,6 +218,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     "footer.forBuyers": "Buyers",
     "footer.forAgents": "Developers",
     "footer.contact": "Contact",
+    "footer.blog": "Blog & Guides",
+    "footer.about": "About Us",
+    "nav.about": "About",
+    "nav.blog": "Blog",
 
     // Stats
     "stats.activeProjects": "Active Projects",
@@ -302,6 +343,39 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Language
     "lang.he": "עברית",
     "lang.en": "English",
+
+    // Footer
+    "footer.browseProjects": "Browse Projects",
+    "footer.searchByCity": "Search by City",
+    "footer.featuredProjects": "Featured Projects",
+    "footer.listYourProject": "List Your Project",
+    "footer.agentDashboard": "Agent Dashboard",
+    "footer.premiumPlans": "Premium Plans",
+    "footer.privacy": "Privacy Policy",
+    "footer.terms": "Terms of Service",
+    "footer.forBuyers": "Buyers",
+    "footer.forAgents": "For Agents",
+
+    // Admin
+    "admin.title": "Admin",
+    "admin.ownerPanel": "Owner Panel",
+    "admin.loginFailed": "Login failed",
+    "admin.adminDashboard": "Admin Dashboard",
+    "admin.featured": "Featured",
+    "admin.basicInfo": "Basic Info",
+    "admin.totalProjects": "Total Projects",
+    "admin.totalAgents": "Total Agents",
+    "admin.totalLeads": "Total Leads",
+    "admin.preSale": "Pre-Sale",
+    "admin.underConstruction": "Under Construction",
+    "admin.ready": "Ready",
+
+    // Blog
+    "blog.title": "Blog",
+    "blog.articleNotFound": "Article not found",
+
+    // Agent
+    "agent.loginFailed": "Login failed",
   },
 };
 

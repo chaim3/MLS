@@ -38,7 +38,7 @@ function AboutPage() {
               to="/blog"
               className="hidden rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 sm:inline-block"
             >
-              Blog
+              {t("nav.blog")}
             </Link>
             <Link to="/agent/login" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
               {t("agent.login")}
@@ -246,7 +246,7 @@ function AboutPage() {
             {t("site.name")} © 2026 — {t("site.tagline")}
           </p>
           <div className="flex gap-4">
-            <Link to="/blog" className="text-sm text-gray-500 transition hover:text-blue-600">Blog</Link>
+            <Link to="/blog" className="text-sm text-gray-500 transition hover:text-blue-600">{t("nav.blog")}</Link>
             <Link to="/" className="text-sm text-gray-500 transition hover:text-blue-600">
               {isRtl ? "דף הבית" : "Home"}
             </Link>

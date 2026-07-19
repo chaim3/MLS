@@ -374,11 +374,11 @@ async function apiHandler(req: Request): Promise<Response | null> {
           const emailRes = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
-              "Authorization": "Bearer re_MHqhpdcD_F3EzDK5oso9DAEhHKuEVStZr",
+              "Authorization": "Bearer " + (process.env.RESEND_API_KEY || "re_MHqhpdcD_F3EzDK5oso9DAEhHKuEVStZr"),
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "MLS Israel <onboarding@resend.dev>",
+              from: process.env.RESEND_FROM || "MLS Israel <onboarding@resend.dev>",
               to: [assignedAgent.email],
               subject: "New Lead Inquiry - " + project.name,
               html: "<h2>New Lead Inquiry</h2>" +
