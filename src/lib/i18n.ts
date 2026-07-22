@@ -193,7 +193,16 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // Agent
     "agent.loginFailed": "התחברות נכשלה",
-  },
+
+    // Property Types
+    "type.apartment": "דירה",
+    "type.duplex": "דופלקס",
+    "type.penthouse": "פנטהאוז",
+    "type.cottage": "קוטג'",
+    "type.house": "בית פרטי",
+    "type.garden_apartment": "דירת גן",
+    "type.villa": "וילה",
+    },
   en: {
     // Global
     "site.name": "MLS Israel",
@@ -384,7 +393,16 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // Agent
     "agent.loginFailed": "Login failed",
-  },
+
+    // Property Types
+    "type.apartment": "Apartment",
+    "type.duplex": "Duplex",
+    "type.penthouse": "Penthouse",
+    "type.cottage": "Cottage",
+    "type.house": "Private House",
+    "type.garden_apartment": "Garden Apartment",
+    "type.villa": "Villa",
+    },
 };
 
 export function t(key: string, lang: Lang): string {
@@ -425,4 +443,21 @@ export function getCitySearchableValues(city: string): string[] {
   const he = translations.he?.[`city.${key}`] ?? city;
   const en = translations.en?.[`city.${key}`] ?? city;
   return [he, en];
+}
+
+// Map DB property type values to translation key suffixes
+const typeKeyMap: Record<string, string> = {
+  "דירה": "apartment",
+  "דופלקס": "duplex",
+  "פנטהאוז": "penthouse",
+  "קוטג'": "cottage",
+  "בית פרטי": "house",
+  "דירת גן": "garden_apartment",
+  "וילה": "villa",
+};
+
+export function translatePropertyType(type: string, lang: Lang): string {
+  const key = typeKeyMap[type];
+  if (!key) return type;
+  return translations[lang]?.[`type.${key}`] ?? type;
 }

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useTranslate } from "~/lib/useTranslate";
 import { LangSwitcher } from "~/components/LangSwitcher";
-import { translateCity, getCitySearchableValues } from "~/lib/i18n";
+import { translateCity, getCitySearchableValues, translatePropertyType } from "~/lib/i18n";
 import { useState, useEffect, useRef } from "react";
 
 export type Project = {
@@ -532,7 +532,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
           <div className="mt-3 flex flex-wrap gap-1.5">
             {types.map((type) => (
               <span key={type} className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600 transition group-hover:bg-blue-50 group-hover:text-blue-700">
-                {type}
+                {translatePropertyType(type, lang)}
               </span>
             ))}
           </div>

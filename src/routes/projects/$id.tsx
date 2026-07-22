@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslate } from "~/lib/useTranslate";
-import { translateCity } from "~/lib/i18n";
+import { translateCity, translatePropertyType } from "~/lib/i18n";
 import { LangSwitcher } from "~/components/LangSwitcher";
 import { useState } from "react";
 export const Route = createFileRoute("/projects/$id")({
@@ -177,7 +177,7 @@ function ProjectDetail() {
             <div className="mt-4 flex flex-wrap gap-2">
               {types.map((type: string) => (
                 <span key={type} className="rounded-lg bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600">
-                  {type}
+                  {translatePropertyType(type, lang)}
                 </span>
               ))}
             </div>
