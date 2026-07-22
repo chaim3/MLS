@@ -9,6 +9,16 @@ export async function getDbAsync(): Promise<any> {
   const dbDir = path.resolve(process.cwd(), "data");
   const dbPath = path.resolve(dbDir, "newbuild.db");
   fs.mkdirSync(dbDir, { recursive: true });
+  // Ensure the current user owns the data directory and its contents.
+  // Without this, files created by a root publish would be read-only for the
+  // non-root server process, causing SQLITE_READONLY on every write.
+  try {
+    const { stdout: whoami } = Bun.spawnSync(["whoami"], { stdout: "pipe" });
+    const user = whoami.toString().trim();
+    if (user && user !== "root") {
+      Bun.spawnSync(["sudo", "chown", "-R", `${user}:team`, dbDir]);
+    }
+  } catch (_) { /* best-effort; mkdirSync above would have failed already if unwritable */ }
   _db = new Database(dbPath);
   _db.exec("PRAGMA journal_mode = WAL");
   _db.exec("PRAGMA foreign_keys = ON");
