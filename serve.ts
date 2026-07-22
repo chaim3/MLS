@@ -84,25 +84,6 @@ function getDb(): Database {
       .run(adminId, "Admin", "MLS Israel", "chaim@bienenfeld.org", "0587011221", adminPw, "מנהל המערכת");
   }
 
-  const demoAgentExists = _db.prepare("SELECT id FROM agents WHERE email = 'info@forgeoneconsulting.com'").get();
-  if (!demoAgentExists) {
-    const demoId = "demo-agent-001";
-    _db.prepare("INSERT INTO agents (id, name, company, email, phone, password, description) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .run(demoId, "ישראל ישראלי", "יזמות ובנייה בע״מ", "info@forgeoneconsulting.com", "03-5555555", bcrypt.hashSync("demo123", 10), "סוכן נדל״ן מנוסה עם 15 שנות ניסיון בליווי רוכשים בפרויקטים חדשים ברחבי הארץ.");
-
-    const demoProjects = [
-      { name: "מגדל היובל", city: "תל אביב", address: "רחוב היובל 15", types: ["דירה", "דופלקס"], priceMin: 2500000, priceMax: 5800000, units: 120, handover: "רבעון 3 2026", status: "under-construction", desc: "מגדל יוקרתי בן 35 קומות בלב תל אביב. דירות נוף לים, גג פנטהאוז, בריכה וחדר כושר.", descEn: "A luxurious 35-story tower in the heart of Tel Aviv. Sea-view apartments, penthouse roof, swimming pool, and gym.", featured: 1, website: "https://migdal-hayovel.co.il" },
-      { name: "נופי כרמל", city: "חיפה", address: "דרך הים 8", types: ["דירה", "בית"], priceMin: 1800000, priceMax: 3500000, units: 85, handover: "רבעון 1 2027", status: "pre-sale", desc: "שכונת יוקרה על מורדות הכרמל עם נוף פנורמי למפרץ. גינות פרטיות וחניה תת קרקעית.", descEn: "A luxury neighborhood on the Carmel slopes with panoramic views of the bay. Private gardens and underground parking.", featured: 1, website: "https://nof-carmel.co.il" },
-    ];
-
-    for (const p of demoProjects) {
-      const projectId = uuid();
-      _db.prepare(`INSERT INTO projects (id, name, description, description_he, description_en, city, address, property_types, price_min, price_max, unit_count, handover_date, status, featured, website_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(projectId, p.name, p.desc, p.desc, p.descEn, p.city, p.address, JSON.stringify(p.types), p.priceMin, p.priceMax, p.units, p.handover, p.status, p.featured, p.website);
-      _db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run(projectId, demoId);
-    }
-  }
-
   // Seed blog posts
   const blogCount = _db.prepare("SELECT COUNT(*) as cnt FROM blog_posts").get() as any;
   if (blogCount.cnt === 0) {
