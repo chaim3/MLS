@@ -1,10 +1,9 @@
 import handler from "./dist/server/server.js";
-import { Database } from "bun:sqlite";
 import bcrypt from "bcryptjs";
+import { getDbAsync } from "./src/lib/db";
 import { v4 as uuid } from "uuid";
 import path from "node:path";
 import fs from "node:fs";
-
 
 const PORT = 3000;
 const HOST = "0.0.0.0";
@@ -12,16 +11,12 @@ const CLIENT_DIR = `${import.meta.dir}/dist/client`;
 const PUBLIC_DIR = path.resolve(process.cwd(), "public");
 
 
-const dbDir = path.resolve(process.cwd(), "data");
-const dbPath = path.resolve(dbDir, "newbuild.db");
-fs.mkdirSync(dbDir, { recursive: true });
+fs.mkdirSync(path.resolve(process.cwd(), "data"), { recursive: true });
 
-let _db: Database | null = null;
-function getDb(): Database {
+let _db: any = null;
+async function getDb() {
   if (_db) return _db;
-  _db = new Database(dbPath);
-  _db.exec("PRAGMA journal_mode = WAL");
-  _db.exec("PRAGMA foreign_keys = ON");
+  _db = await getDbAsync();
   _db.exec(`CREATE TABLE IF NOT EXISTS agents (
     id TEXT PRIMARY KEY, name TEXT NOT NULL, company TEXT NOT NULL DEFAULT '',
     email TEXT UNIQUE NOT NULL, phone TEXT NOT NULL DEFAULT '',
@@ -125,16 +120,16 @@ function getDb(): Database {
   return _db;
 }
 
-function getSessionAgent(sessionId: string): any {
+async function getSessionAgent(sessionId: string): Promise<any> {
   if (!sessionId) return null;
-  const db = getDb();
+  const db = await getDb();
   return db.prepare(
     "SELECT a.id, a.name, a.company, a.email, a.phone, a.photo_url, a.description FROM sessions s JOIN agents a ON a.id = s.agent_id WHERE s.id = ?"
   ).get(sessionId) || null;
 }
 
-function getProjectAgents(projectId: string): any[] {
-  return getDb().prepare(
+async function getProjectAgents(projectId: string): Promise<any[]> {
+  return (await getDb()).prepare(
     "SELECT a.id, a.name, a.company, a.email, a.phone, a.photo_url, a.description FROM project_agents pa JOIN agents a ON a.id = pa.agent_id WHERE pa.project_id = ?"
   ).all(projectId);
 }
@@ -149,7 +144,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     if (!name || !email || !password) {
       return Response.json({ error: "שם, אימייל וסיסמה נדרשים" }, { status: 400 });
     }
-    const db = getDb();
+    const db = await getDb();
     const existing = db.prepare("SELECT id FROM agents WHERE email = ?").get(email);
     if (existing) {
       return Response.json({ error: "האימייל כבר רשום במערכת" }, { status: 400 });
@@ -173,7 +168,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     if (!email || !password) {
       return Response.json({ error: "אימייל וסיסמה נדרשים" }, { status: 400 });
     }
-    const db = getDb();
+    const db = await getDb();
     const agent = db.prepare("SELECT * FROM agents WHERE email = ?").get(email) as any;
     if (!agent || !bcrypt.compareSync(password, agent.password)) {
       return Response.json({ error: "אימייל או סיסמה שגויים" }, { status: 401 });
@@ -191,7 +186,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
     if (match) {
-      getDb().prepare("DELETE FROM sessions WHERE id = ?").run(match[1]);
+     (await getDb()).prepare("DELETE FROM sessions WHERE id = ?").run(match[1]);
     }
     return Response.json(
       { success: true },
@@ -201,20 +196,20 @@ async function apiHandler(req: Request): Promise<Response | null> {
 
   // Public: List all projects (for homepage) with agents
   if (pathname === "/api/public/projects" && req.method === "GET") {
-    const db = getDb();
+    const db = await getDb();
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (id) {
       const project = db.prepare("SELECT id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, featured, created_at, updated_at FROM projects WHERE id = ?").get(id) as any;
       if (!project) return Response.json({ error: "Not found" }, { status: 404 });
-      project.agents = getProjectAgents(project.id);
+      project.agents = await getProjectAgents(project.id);
       return Response.json({ project });
     }
     const projects = db.prepare("SELECT id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, featured, created_at, updated_at FROM projects ORDER BY featured DESC, created_at DESC").all();
-    const result = (projects as any[]).map(p => ({
+    const result = await Promise.all((projects as any[]).map(async p => ({
       ...p,
-      agents: getProjectAgents(p.id),
-    }));
+      agents: await getProjectAgents(p.id),
+    })));
     return Response.json({ projects: result });
   }
 
@@ -222,7 +217,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname.startsWith("/api/public/agents/") && req.method === "GET") {
     const agentId = pathname.replace("/api/public/agents/", "");
     if (!agentId) return Response.json({ error: "Agent ID required" }, { status: 400 });
-    const db = getDb();
+    const db = await getDb();
     const agent = db.prepare("SELECT id, name, company, email, phone, photo_url, description, created_at FROM agents WHERE id = ?").get(agentId) as any;
     if (!agent) return Response.json({ error: "Not found" }, { status: 404 });
     const projects = db.prepare(`
@@ -236,19 +231,19 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/projects" && req.method === "GET") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!agent) return Response.json({ projects: [], agent: null });
-    const db = getDb();
+    const db = await getDb();
     const projects = db.prepare(`
       SELECT p.*, (SELECT COUNT(*) FROM leads WHERE project_id = p.id) as total_leads,
              (SELECT COUNT(*) FROM leads WHERE project_id = p.id AND seen = 0) as new_leads
       FROM projects p JOIN project_agents pa ON pa.project_id = p.id
       WHERE pa.agent_id = ? ORDER BY p.created_at DESC
     `).all(agent.id);
-    const result = (projects as any[]).map(p => ({
+    const result = await Promise.all((projects as any[]).map(async p => ({
       ...p,
-      agents: getProjectAgents(p.id),
-    }));
+      agents: await getProjectAgents(p.id),
+    })));
     return Response.json({ projects: result, agent });
   }
 
@@ -256,14 +251,14 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/projects" && req.method === "POST") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!agent) return Response.json({ error: "לא מחובר" }, { status: 401 });
 
     const body = await req.json();
     const { id, name, description, description_he, description_en, city, address, lat, lng, propertyTypes, priceMin, priceMax, unitCount, handoverDate, status, photoUrls, floorPlanUrls, websiteUrl } = body;
     if (!name || !city) return Response.json({ error: "שם ועיר נדרשים" }, { status: 400 });
 
-    const db = getDb();
+    const db = await getDb();
     if (id) {
       // Check user is assigned to this project
       const rel = db.prepare("SELECT * FROM project_agents WHERE project_id = ? AND agent_id = ?").get(id, agent.id);
@@ -291,12 +286,12 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/projects" && req.method === "DELETE") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!agent) return Response.json({ error: "לא מחובר" }, { status: 401 });
     const url = new URL(req.url);
     const projectId = url.searchParams.get("id");
     if (!projectId) return Response.json({ error: "מזהה פרויקט נדרש" }, { status: 400 });
-    const db = getDb();
+    const db = await getDb();
     const rel = db.prepare("SELECT * FROM project_agents WHERE project_id = ? AND agent_id = ?").get(projectId, agent.id);
     if (!rel) return Response.json({ error: "Unauthorized" }, { status: 403 });
     db.prepare("DELETE FROM project_agents WHERE project_id = ? AND agent_id = ?").run(projectId, agent.id);
@@ -312,12 +307,12 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/leads" && req.method === "GET") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!agent) return Response.json({ leads: [] });
     const url = new URL(req.url);
     const projectId = url.searchParams.get("projectId");
     if (!projectId) return Response.json({ leads: [] });
-    const db = getDb();
+    const db = await getDb();
     const rel = db.prepare("SELECT * FROM project_agents WHERE project_id = ? AND agent_id = ?").get(projectId, agent.id);
     if (!rel) return Response.json({ leads: [] });
     const leads = db.prepare("SELECT l.*, a.name as assigned_agent_name FROM leads l LEFT JOIN agents a ON a.id = l.assigned_agent_id WHERE l.project_id = ? ORDER BY l.created_at DESC").all(projectId);
@@ -335,7 +330,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const { name: leadName, phone: leadPhone, email: leadEmail, message: leadMessage, agentId } = body;
     if (!leadName || !leadPhone) return Response.json({ error: "שם וטלפון נדרשים" }, { status: 400 });
 
-    const db = getDb();
+    const db = await getDb();
     const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(projectId) as any;
     if (!project) return Response.json({ error: "הפרויקט לא נמצא" }, { status: 404 });
 
@@ -384,13 +379,13 @@ async function apiHandler(req: Request): Promise<Response | null> {
     db.prepare("UPDATE leads SET notified = ? WHERE id = ?").run(notified, leadId);
     console.log("New lead saved:", leadName, "for project:", project.name, "assigned to:", assignedAgentId || "none", "- notified:", notified === 1);
 
-    const agents = getProjectAgents(projectId);
+    const agents = await getProjectAgents(projectId);
     return Response.json({ success: true, lead: { name: leadName, phone: leadPhone, email: leadEmail, message: leadMessage, projectName: project.name, agents } });
   }
 
   // Internal: Get pending email notifications (notified=0)
   if (pathname === "/api/pending-notifications" && req.method === "GET") {
-    const db = getDb();
+    const db = await getDb();
     const leads = db.prepare(
       "SELECT l.id as lead_id, l.name as lead_name, l.phone as lead_phone, l.email as lead_email, l.message as lead_message, " +
       "l.created_at, p.name as project_name, p.city as project_city, " +
@@ -406,7 +401,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const body = await req.json();
     const { leadId } = body;
     if (!leadId) return Response.json({ error: "leadId required" }, { status: 400 });
-    const db = getDb();
+    const db = await getDb();
     db.prepare("UPDATE leads SET notified = 1 WHERE id = ?").run(leadId);
     return Response.json({ success: true });
   }
@@ -418,7 +413,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     if (!["new", "contacted", "in_progress", "completed"].includes(status)) {
       return Response.json({ error: "Invalid status" }, { status: 400 });
     }
-    getDb().prepare("UPDATE leads SET status = ? WHERE id = ?").run(status, id);
+   (await getDb()).prepare("UPDATE leads SET status = ? WHERE id = ?").run(status, id);
     return Response.json({ success: true });
   }
 
@@ -426,7 +421,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/leads/delete" && req.method === "POST") {
     const body = await req.json();
     if (!body.id) return Response.json({ error: "Lead ID required" }, { status: 400 });
-    getDb().prepare("DELETE FROM leads WHERE id = ?").run(body.id);
+   (await getDb()).prepare("DELETE FROM leads WHERE id = ?").run(body.id);
     return Response.json({ success: true });
   }
 
@@ -455,9 +450,9 @@ async function apiHandler(req: Request): Promise<Response | null> {
     if (!checkAdminAuth(req)) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const db = getDb();
+    const db = await getDb();
     const projects = db.prepare("SELECT * FROM projects ORDER BY created_at DESC").all();
-    const projectsWithAgents = (projects as any[]).map(p => ({ ...p, agents: getProjectAgents(p.id) }));
+    const projectsWithAgents = await Promise.all((projects as any[]).map(async p => ({ ...p, agents: await getProjectAgents(p.id) })));
     const agentsList = db.prepare("SELECT id, name, company, email, phone, photo_url, description, created_at FROM agents ORDER BY created_at DESC").all();
     const leads = db.prepare("SELECT l.*, p.name as project_name, a.name as assigned_agent_name FROM leads l JOIN projects p ON p.id = l.project_id LEFT JOIN agents a ON a.id = l.assigned_agent_id ORDER BY l.created_at DESC LIMIT 100").all();
     const blogPosts = db.prepare("SELECT * FROM blog_posts ORDER BY created_at DESC").all();
@@ -479,7 +474,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/admin/projects/delete" && req.method === "POST") {
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    getDb().prepare("DELETE FROM projects WHERE id = ?").run(body.id);
+   (await getDb()).prepare("DELETE FROM projects WHERE id = ?").run(body.id);
     return Response.json({ success: true });
   }
 
@@ -487,7 +482,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/admin/agents/delete" && req.method === "POST") {
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    getDb().prepare("DELETE FROM agents WHERE id = ? AND email != 'chaim@bienenfeld.org'").run(body.id);
+   (await getDb()).prepare("DELETE FROM agents WHERE id = ? AND email != 'chaim@bienenfeld.org'").run(body.id);
     return Response.json({ success: true });
   }
 
@@ -495,10 +490,10 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/admin/projects/featured" && req.method === "POST") {
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    const project = getDb().prepare("SELECT featured FROM projects WHERE id = ?").get(body.id) as any;
+    const project =(await getDb()).prepare("SELECT featured FROM projects WHERE id = ?").get(body.id) as any;
     if (!project) return Response.json({ error: "Not found" }, { status: 404 });
     const newVal = project.featured ? 0 : 1;
-    getDb().prepare("UPDATE projects SET featured = ? WHERE id = ?").run(newVal, body.id);
+   (await getDb()).prepare("UPDATE projects SET featured = ? WHERE id = ?").run(newVal, body.id);
     return Response.json({ success: true, featured: !!newVal });
   }
 
@@ -508,7 +503,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const body = await req.json();
     const { name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url, agent_id } = body;
     if (!name || !city) return Response.json({ error: "Name and city are required" }, { status: 400 });
-    const db = getDb();
+    const db = await getDb();
     // Check duplicate
     const existing = db.prepare("SELECT id FROM projects WHERE name = ? AND city = ?").get(name, city) as any;
     if (existing) {
@@ -530,7 +525,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const body = await req.json();
     const { name, email, password, company, phone, description } = body;
     if (!name || !email || !password) return Response.json({ error: "Name, email, and password are required" }, { status: 400 });
-    const db = getDb();
+    const db = await getDb();
     const existing = db.prepare("SELECT id FROM agents WHERE email = ?").get(email);
     if (existing) return Response.json({ error: "Email already registered" }, { status: 400 });
     const id = uuid();
@@ -544,12 +539,12 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/admin/projects/update" && req.method === "POST") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const { id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url } = body;
     if (!id) return Response.json({ error: "Project ID is required" }, { status: 400 });
-    const db = getDb();
+    const db = await getDb();
     if (!db.prepare("SELECT id FROM projects WHERE id = ?").get(id)) return Response.json({ error: "Not found" }, { status: 404 });
     const photoUrlsJson = photo_url ? JSON.stringify([photo_url]) : undefined;
     db.prepare(`UPDATE projects SET name = COALESCE(?, name), description = COALESCE(?, description), description_he = COALESCE(?, description_he), description_en = COALESCE(?, description_en), city = COALESCE(?, city), address = COALESCE(?, address), price_min = COALESCE(?, price_min), price_max = COALESCE(?, price_max), status = COALESCE(?, status), handover_date = COALESCE(?, handover_date), photo_urls = COALESCE(?, photo_urls), website_url = COALESCE(?, website_url), updated_at = datetime('now') WHERE id = ?`)
@@ -563,7 +558,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const body = await req.json();
     const { id, name, email, password, company, phone, description } = body;
     if (!id) return Response.json({ error: "Agent ID is required" }, { status: 400 });
-    const db = getDb();
+    const db = await getDb();
     if (!db.prepare("SELECT id FROM agents WHERE id = ?").get(id)) return Response.json({ error: "Not found" }, { status: 404 });
     if (email) {
       const dup = db.prepare("SELECT id FROM agents WHERE email = ? AND id != ?").get(email, id);
@@ -582,11 +577,11 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/agent/profile" && req.method === "POST") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!agent) return Response.json({ error: "לא מחובר" }, { status: 401 });
     const body = await req.json();
     const { name, company, phone, description, email } = body;
-    const db = getDb();
+    const db = await getDb();
     if (email && email !== agent.email) {
       const dup = db.prepare("SELECT id FROM agents WHERE email = ? AND id != ?").get(email, agent.id);
       if (dup) return Response.json({ error: "האימייל כבר בשימוש" }, { status: 400 });
@@ -600,7 +595,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/agent/photo" && req.method === "POST") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!agent) return Response.json({ error: "לא מחובר" }, { status: 401 });
 
     const formData = await req.formData();
@@ -632,7 +627,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const photoUrl = `/uploads/avatars/${filename}`;
 
     // Update the agent's photo_url in the database
-    const db = getDb();
+    const db = await getDb();
     db.prepare("UPDATE agents SET photo_url = ? WHERE id = ?").run(photoUrl, agent.id);
 
     return Response.json({ success: true, photo_url: photoUrl });
@@ -656,7 +651,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
 
   // SEO: Schema.org JSON-LD
   if (pathname === "/api/seo/schema" && req.method === "GET") {
-    const db = getDb();
+    const db = await getDb();
     const projects = db.prepare("SELECT id, name, description, city, price_min, price_max, updated_at FROM projects ORDER BY updated_at DESC LIMIT 50").all() as any[];
     const schema = {
       "@context": "https://schema.org",
@@ -687,7 +682,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/blog" && req.method === "GET") {
     const url = new URL(req.url);
     const slug = url.searchParams.get("slug");
-    const db = getDb();
+    const db = await getDb();
     if (slug) {
       const post = db.prepare("SELECT * FROM blog_posts WHERE slug = ?").get(slug) as any;
       if (!post) return Response.json({ error: "Not found" }, { status: 404 });
@@ -701,9 +696,9 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/admin/blog" && req.method === "GET") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
-    const db = getDb();
+    const db = await getDb();
     const posts = db.prepare("SELECT * FROM blog_posts ORDER BY created_at DESC").all();
     return Response.json({ posts });
   }
@@ -711,12 +706,12 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/admin/blog/create" && req.method === "POST") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const { slug, title, excerpt, content_he, content_en, image_url, published_at } = body;
     if (!slug || !title) return Response.json({ error: "slug and title are required" }, { status: 400 });
-    const db = getDb();
+    const db = await getDb();
     const id = uuid();
     db.prepare("INSERT INTO blog_posts (id, slug, title, excerpt, content_he, content_en, image_url, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
       .run(id, slug, title, excerpt || "", content_he || "", content_en || "", image_url || "", published_at || null);
@@ -726,12 +721,12 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/admin/blog/update" && req.method === "POST") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     const { id, slug, title, excerpt, content_he, content_en, image_url, published_at } = body;
     if (!id) return Response.json({ error: "id is required" }, { status: 400 });
-    const db = getDb();
+    const db = await getDb();
     db.prepare("UPDATE blog_posts SET slug = COALESCE(?, slug), title = COALESCE(?, title), excerpt = COALESCE(?, excerpt), content_he = COALESCE(?, content_he), content_en = COALESCE(?, content_en), image_url = COALESCE(?, image_url), published_at = COALESCE(?, published_at) WHERE id = ?")
       .run(slug || null, title || null, excerpt || null, content_he || null, content_en || null, image_url || null, published_at || null, id);
     return Response.json({ success: true });
@@ -740,11 +735,11 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/admin/blog/delete" && req.method === "POST") {
     const cookie = req.headers.get("cookie") || "";
     const match = cookie.match(/session=([^;]+)/);
-    const agent = match ? getSessionAgent(match[1]) : null;
+    const agent = match ? await getSessionAgent(match[1]) : null;
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
     if (!body.id) return Response.json({ error: "id is required" }, { status: 400 });
-    getDb().prepare("DELETE FROM blog_posts WHERE id = ?").run(body.id);
+   (await getDb()).prepare("DELETE FROM blog_posts WHERE id = ?").run(body.id);
     return Response.json({ success: true });
   }
 
@@ -773,7 +768,7 @@ for (let attempt = 1; ; attempt++) {
 
         // Sitemap
         if (pathname === "/sitemap.xml") {
-          const db = getDb();
+          const db = await getDb();
           const projects = db.prepare("SELECT id, created_at FROM projects").all() as any[];
           const agents = db.prepare("SELECT id, created_at FROM agents").all() as any[];
           const blogs = db.prepare("SELECT slug, published_at FROM blog_posts WHERE published_at IS NOT NULL").all() as any[];
