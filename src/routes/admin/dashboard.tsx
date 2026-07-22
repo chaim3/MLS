@@ -25,6 +25,8 @@ function AdminDashboard() {
   const [editingAgent, setEditingAgent] = useState<any | null>(null);
   const [viewingAgent, setViewingAgent] = useState<any | null>(null);
   const [formMsg, setFormMsg] = useState("");
+  const [addDescHe, setAddDescHe] = useState("");
+  const [addDescEn, setAddDescEn] = useState("");
   const addPhotoInputRef = useRef<HTMLInputElement>(null);
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
 
@@ -566,11 +568,17 @@ function AdminDashboard() {
               </div>
               <div>
                 <label className="mb-1 block text-xs text-gray-400">תיאור (עברית)</label>
-                <textarea name="description_he" rows={2} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="תיאור הפרויקט בעברית..." />
+                <div className="relative">
+                  <textarea name="description_he" rows={2} value={addDescHe} onChange={(e) => setAddDescHe(e.target.value)} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="תיאור הפרויקט בעברית..." />
+                  <button type="button" onClick={async () => { if (!addDescHe) return; try { const res = await fetch("/api/translate", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({q:addDescHe,source:"he",target:"en"})}); const data = await res.json(); if (data.translatedText) setAddDescEn(prev => prev ? prev + "\n\n" + data.translatedText : data.translatedText); } catch(e) {} }} className="absolute left-2 bottom-2 rounded bg-amber-600/30 px-2 py-1 text-xs text-amber-300 hover:bg-amber-600/50">🔄 תרגם לאנגלית</button>
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs text-gray-400">Description (English)</label>
-                <textarea name="description_en" rows={2} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Project description in English..." />
+                <div className="relative">
+                  <textarea name="description_en" rows={2} value={addDescEn} onChange={(e) => setAddDescEn(e.target.value)} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Project description in English..." />
+                  <button type="button" onClick={async () => { if (!addDescEn) return; try { const res = await fetch("/api/translate", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({q:addDescEn,source:"en",target:"he"})}); const data = await res.json(); if (data.translatedText) setAddDescHe(prev => prev ? prev + "\n\n" + data.translatedText : data.translatedText); } catch(e) {} }} className="absolute left-2 bottom-2 rounded bg-amber-600/30 px-2 py-1 text-xs text-amber-300 hover:bg-amber-600/50">🔄 Translate to Hebrew</button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -695,11 +703,17 @@ function AdminDashboard() {
               </div>
               <div>
                 <label className="mb-1 block text-xs text-gray-400">תיאור (עברית)</label>
-                <textarea name="description_he" rows={3} defaultValue={editingProject.description_he || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                <div className="relative">
+                  <textarea name="description_he" rows={3} value={editingProject?.description_he || ""} onChange={(e) => setEditingProject({ ...editingProject!, description_he: e.target.value })} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                  <button type="button" onClick={async () => { const val = editingProject?.description_he; if (!val) return; try { const res = await fetch("/api/translate", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({q:val,source:"he",target:"en"})}); const data = await res.json(); if (data.translatedText) setEditingProject(prev => prev ? { ...prev, description_en: (prev.description_en ? prev.description_en + "\n\n" : "") + data.translatedText } : prev); } catch(e) {} }} className="absolute left-2 bottom-2 rounded bg-amber-600/30 px-2 py-1 text-xs text-amber-300 hover:bg-amber-600/50">🔄 תרגם לאנגלית</button>
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs text-gray-400">Description (English)</label>
-                <textarea name="description_en" rows={3} defaultValue={editingProject.description_en || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                <div className="relative">
+                  <textarea name="description_en" rows={3} value={editingProject?.description_en || ""} onChange={(e) => setEditingProject({ ...editingProject!, description_en: e.target.value })} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                  <button type="button" onClick={async () => { const val = editingProject?.description_en; if (!val) return; try { const res = await fetch("/api/translate", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({q:val,source:"en",target:"he"})}); const data = await res.json(); if (data.translatedText) setEditingProject(prev => prev ? { ...prev, description_he: (prev.description_he ? prev.description_he + "\n\n" : "") + data.translatedText } : prev); } catch(e) {} }} className="absolute left-2 bottom-2 rounded bg-amber-600/30 px-2 py-1 text-xs text-amber-300 hover:bg-amber-600/50">🔄 Translate to Hebrew</button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
