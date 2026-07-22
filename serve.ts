@@ -36,6 +36,7 @@ async function getDb() {
     handover_date TEXT, status TEXT NOT NULL DEFAULT 'pre-sale',
     photo_urls TEXT NOT NULL DEFAULT '[]', floor_plan_urls TEXT NOT NULL DEFAULT '[]',
     website_url TEXT NOT NULL DEFAULT '',
+    brochure_url TEXT NOT NULL DEFAULT '',
     featured INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`);
@@ -52,6 +53,7 @@ async function getDb() {
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`);
   try { _db.exec("ALTER TABLE projects ADD COLUMN website_url TEXT NOT NULL DEFAULT ''"); } catch (e) {}
+  try { _db.exec("ALTER TABLE projects ADD COLUMN brochure_url TEXT NOT NULL DEFAULT ''"); } catch (e) {}
   try { _db.exec("ALTER TABLE leads ADD COLUMN notified INTEGER NOT NULL DEFAULT 0"); } catch (e) {}
   try { _db.exec("ALTER TABLE leads ADD COLUMN seen INTEGER NOT NULL DEFAULT 0"); } catch (e) {}
   try { _db.exec("ALTER TABLE agents ADD COLUMN description TEXT NOT NULL DEFAULT ''"); } catch (e) {}
@@ -216,12 +218,12 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (id) {
-      const project = db.prepare("SELECT id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, featured, created_at, updated_at FROM projects WHERE id = ?").get(id) as any;
+      const project = db.prepare("SELECT id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, brochure_url, featured, created_at, updated_at FROM projects WHERE id = ?").get(id) as any;
       if (!project) return Response.json({ error: "Not found" }, { status: 404 });
       project.agents = await getProjectAgents(project.id);
       return Response.json({ project });
     }
-    const projects = db.prepare("SELECT id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, featured, created_at, updated_at FROM projects ORDER BY featured DESC, created_at DESC").all();
+    const projects = db.prepare("SELECT id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, brochure_url, featured, created_at, updated_at FROM projects ORDER BY featured DESC, created_at DESC").all();
     const result = await Promise.all((projects as any[]).map(async p => ({
       ...p,
       agents: await getProjectAgents(p.id),
@@ -271,7 +273,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
     if (!agent) return Response.json({ error: "לא מחובר" }, { status: 401 });
 
     const body = await req.json();
-    const { id, name, description, description_he, description_en, city, address, lat, lng, propertyTypes, priceMin, priceMax, unitCount, handoverDate, status, photoUrls, floorPlanUrls, websiteUrl } = body;
+    const { id, name, description, description_he, description_en, city, address, lat, lng, propertyTypes, priceMin, priceMax, unitCount, handoverDate, status, photoUrls, floorPlanUrls, websiteUrl, brochureUrl } = body;
     if (!name || !city) return Response.json({ error: "שם ועיר נדרשים" }, { status: 400 });
 
     const db = await getDb();
@@ -279,8 +281,8 @@ async function apiHandler(req: Request): Promise<Response | null> {
       // Check user is assigned to this project
       const rel = db.prepare("SELECT * FROM project_agents WHERE project_id = ? AND agent_id = ?").get(id, agent.id);
       if (!rel) return Response.json({ error: "Unauthorized" }, { status: 403 });
-      db.prepare(`UPDATE projects SET name=?, description=?, description_he=?, description_en=?, city=?, address=?, lat=?, lng=?, property_types=?, price_min=?, price_max=?, unit_count=?, handover_date=?, status=?, photo_urls=?, floor_plan_urls=?, website_url=?, updated_at=datetime('now') WHERE id=?`)
-        .run(name, description || "", description_he || "", description_en || "", city, address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin ?? 0, priceMax ?? 0, unitCount ?? 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "", id);
+      db.prepare(`UPDATE projects SET name=?, description=?, description_he=?, description_en=?, city=?, address=?, lat=?, lng=?, property_types=?, price_min=?, price_max=?, unit_count=?, handover_date=?, status=?, photo_urls=?, floor_plan_urls=?, website_url=?, brochure_url=?, updated_at=datetime('now') WHERE id=?`)
+        .run(name, description || "", description_he || "", description_en || "", city, address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin ?? 0, priceMax ?? 0, unitCount ?? 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "", brochureUrl || "", id);
       return Response.json({ success: true, id });
     } else {
       // Check for duplicate project by name + city
@@ -291,8 +293,8 @@ async function apiHandler(req: Request): Promise<Response | null> {
         return Response.json({ success: true, id: existing.id, added: true });
       }
       const projectId = uuid();
-      db.prepare(`INSERT INTO projects (id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(projectId, name, description || "", description_he || "", description_en || "", city, address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin ?? 0, priceMax ?? 0, unitCount ?? 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "");
+      db.prepare(`INSERT INTO projects (id, name, description, description_he, description_en, city, address, lat, lng, property_types, price_min, price_max, unit_count, handover_date, status, photo_urls, floor_plan_urls, website_url, brochure_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(projectId, name, description || "", description_he || "", description_en || "", city, address || "", lat || 0, lng || 0, JSON.stringify(propertyTypes || []), priceMin ?? 0, priceMax ?? 0, unitCount ?? 0, handoverDate || null, status || "pre-sale", JSON.stringify(photoUrls || []), JSON.stringify(floorPlanUrls || []), websiteUrl || "", brochureUrl || "");
       db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run(projectId, agent.id);
       return Response.json({ success: true, id: projectId });
     }
@@ -490,6 +492,33 @@ async function apiHandler(req: Request): Promise<Response | null> {
     return Response.json({ projects: projectsWithAgents, agents: agentsList, leads, blogPosts, stats });
   }
 
+  // Admin: Upload project brochure PDF
+  if (pathname === "/api/admin/projects/upload-file" && req.method === "POST") {
+    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    try {
+      const formData = await req.formData();
+      const file = formData.get("file") as File | null;
+      if (!file) return Response.json({ error: "No file provided" }, { status: 400 });
+      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        return Response.json({ error: "Only PDF files are allowed" }, { status: 400 });
+      }
+      const maxSize = 20 * 1024 * 1024;
+      if (file.size > maxSize) {
+        return Response.json({ error: "File too large. Max 20MB" }, { status: 400 });
+      }
+      const uploadsDir = path.resolve(process.cwd(), "public", "uploads", "projects");
+      fs.mkdirSync(uploadsDir, { recursive: true });
+      const filename = `${crypto.randomUUID()}.pdf`;
+      const filepath = path.join(uploadsDir, filename);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      fs.writeFileSync(filepath, buffer);
+      const url = `/uploads/projects/${filename}`;
+      return Response.json({ success: true, url });
+    } catch (e: any) {
+      return Response.json({ error: e.message || "Upload failed" }, { status: 500 });
+    }
+  }
+
   // Admin: Delete project
   if (pathname === "/api/admin/projects/delete" && req.method === "POST") {
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -521,7 +550,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
   if (pathname === "/api/admin/projects/create" && req.method === "POST") {
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    const { name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url, agent_id } = body;
+    const { name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url, brochure_url, agent_id } = body;
     if (!name || !city) return Response.json({ error: "Name and city are required" }, { status: 400 });
     const db = await getDb();
     // Check duplicate
@@ -532,8 +561,8 @@ async function apiHandler(req: Request): Promise<Response | null> {
     }
     const id = uuid();
     const photoUrlsJson = photo_url ? JSON.stringify([photo_url]) : "[]";
-    db.prepare("INSERT INTO projects (id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_urls, website_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-      .run(id, name, description || "", description_he || "", description_en || "", city, address || "", price_min ? parseInt(price_min) : 0, price_max ? parseInt(price_max) : 0, status || "pre-sale", handover_date || "", photoUrlsJson, website_url || "");
+    db.prepare("INSERT INTO projects (id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_urls, website_url, brochure_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(id, name, description || "", description_he || "", description_en || "", city, address || "", price_min ? parseInt(price_min) : 0, price_max ? parseInt(price_max) : 0, status || "pre-sale", handover_date || "", photoUrlsJson, website_url || "", brochure_url || "");
     const targetAgentId = agent_id || "admin-001";
     db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run(id, targetAgentId);
     return Response.json({ success: true, id });
@@ -562,13 +591,13 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const agent = match ? await getSessionAgent(match[1]) : null;
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    const { id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url, agent_id } = body;
+    const { id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url, brochure_url, agent_id } = body;
     if (!id) return Response.json({ error: "Project ID is required" }, { status: 400 });
     const db = await getDb();
     if (!db.prepare("SELECT id FROM projects WHERE id = ?").get(id)) return Response.json({ error: "Not found" }, { status: 404 });
     const photoUrlsJson = photo_url ? JSON.stringify([photo_url]) : undefined;
-    db.prepare(`UPDATE projects SET name = COALESCE(?, name), description = COALESCE(?, description), description_he = COALESCE(?, description_he), description_en = COALESCE(?, description_en), city = COALESCE(?, city), address = COALESCE(?, address), price_min = COALESCE(?, price_min), price_max = COALESCE(?, price_max), status = COALESCE(?, status), handover_date = COALESCE(?, handover_date), photo_urls = COALESCE(?, photo_urls), website_url = COALESCE(?, website_url), updated_at = datetime('now') WHERE id = ?`)
-      .run(name || null, description || null, description_he || null, description_en || null, city || null, address || null, price_min ? parseInt(price_min) : null, price_max ? parseInt(price_max) : null, status || null, handover_date || null, photoUrlsJson || null, website_url || null, id);
+    db.prepare(`UPDATE projects SET name = COALESCE(?, name), description = COALESCE(?, description), description_he = COALESCE(?, description_he), description_en = COALESCE(?, description_en), city = COALESCE(?, city), address = COALESCE(?, address), price_min = COALESCE(?, price_min), price_max = COALESCE(?, price_max), status = COALESCE(?, status), handover_date = COALESCE(?, handover_date), photo_urls = COALESCE(?, photo_urls), website_url = COALESCE(?, website_url), brochure_url = COALESCE(?, brochure_url), updated_at = datetime('now') WHERE id = ?`)
+      .run(name || null, description || null, description_he || null, description_en || null, city || null, address || null, price_min ? parseInt(price_min) : null, price_max ? parseInt(price_max) : null, status || null, handover_date || null, photoUrlsJson || null, website_url ?? null, brochure_url ?? null, id);
     // Update agent assignment
     if (agent_id) {
       db.prepare("DELETE FROM project_agents WHERE project_id = ?").run(id);

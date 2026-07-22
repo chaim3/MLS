@@ -25,10 +25,13 @@ function AdminDashboard() {
   const [editingAgent, setEditingAgent] = useState<any | null>(null);
   const [viewingAgent, setViewingAgent] = useState<any | null>(null);
   const [formMsg, setFormMsg] = useState("");
+  const [saving, setSaving] = useState(false);
   const [addDescHe, setAddDescHe] = useState("");
   const [addDescEn, setAddDescEn] = useState("");
   const addPhotoInputRef = useRef<HTMLInputElement>(null);
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
+  const addBrochureRef = useRef<HTMLInputElement>(null);
+  const editBrochureRef = useRef<HTMLInputElement>(null);
 
   const handleAddPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,7 +48,6 @@ function AdminDashboard() {
     reader.readAsDataURL(file);
     e.target.value = "";
   };
-
   const handleEditPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -61,7 +63,6 @@ function AdminDashboard() {
     reader.readAsDataURL(file);
     e.target.value = "";
   };
-
   const loadData = useCallback(async () => {
     const res = await fetch("/api/admin/dashboard");
     if (res.status === 401) {
@@ -111,21 +112,43 @@ function AdminDashboard() {
   const handleAddProject = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormMsg("");
-    const fd = new FormData(e.currentTarget);
-    const body: Record<string, string> = {};
-    fd.forEach((v, k) => { body[k] = v as string });
-    const res = await fetch("/api/admin/projects/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const json = await res.json();
-    if (json.error) {
-      setFormMsg(json.error);
-    } else {
-      setShowAddProject(false);
-      setFormMsg("");
-      loadData();
+    setSaving(true);
+    try {
+      const fd = new FormData(e.currentTarget);
+      const body: Record<string, string> = {};
+      fd.forEach((v, k) => { body[k] = v as string });
+      // Upload brochure if file selected
+      const brochureFile = addBrochureRef.current?.files?.[0];
+      if (brochureFile) {
+        const uploadFd = new FormData();
+        uploadFd.append("file", brochureFile);
+        const uploadRes = await fetch("/api/admin/projects/upload-file", { method: "POST", body: uploadFd });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          body.brochure_url = uploadData.url;
+        } else {
+          setFormMsg(uploadData.error || "Brochure upload failed");
+          setSaving(false);
+          return;
+        }
+      }
+      const res = await fetch("/api/admin/projects/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (json.error) {
+        setFormMsg(json.error);
+      } else {
+        setShowAddProject(false);
+        setFormMsg("");
+        loadData();
+      }
+    } catch (err: any) {
+      setFormMsg(err.message || "An error occurred");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -153,21 +176,43 @@ function AdminDashboard() {
   const handleUpdateProject = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormMsg("");
-    const fd = new FormData(e.currentTarget);
-    const body: Record<string, string> = { id: editingProject.id };
-    fd.forEach((v, k) => { body[k] = v as string });
-    const res = await fetch("/api/admin/projects/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const json = await res.json();
-    if (json.error) {
-      setFormMsg(json.error);
-    } else {
-      setEditingProject(null);
-      setFormMsg("");
-      loadData();
+    setSaving(true);
+    try {
+      const fd = new FormData(e.currentTarget);
+      const body: Record<string, string> = { id: editingProject.id };
+      fd.forEach((v, k) => { body[k] = v as string });
+      // Upload brochure if file selected
+      const brochureFile = editBrochureRef.current?.files?.[0];
+      if (brochureFile) {
+        const uploadFd = new FormData();
+        uploadFd.append("file", brochureFile);
+        const uploadRes = await fetch("/api/admin/projects/upload-file", { method: "POST", body: uploadFd });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          body.brochure_url = uploadData.url;
+        } else {
+          setFormMsg(uploadData.error || "Brochure upload failed");
+          setSaving(false);
+          return;
+        }
+      }
+      const res = await fetch("/api/admin/projects/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (json.error) {
+        setFormMsg(json.error);
+      } else {
+        setEditingProject(null);
+        setFormMsg("");
+        loadData();
+      }
+    } catch (err: any) {
+      setFormMsg(err.message || "An error occurred");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -634,11 +679,15 @@ function AdminDashboard() {
                   <label className="mb-1 block text-xs text-gray-400">Project Website URL</label>
                   <input name="website_url" className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="https://project-website.co.il" />
                 </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">PDF Brochure</label>
+                  <input ref={addBrochureRef} type="file" accept=".pdf" className="w-full text-xs text-gray-300 file:mr-2 file:rounded file:border-0 file:bg-amber-600/30 file:px-2 file:py-1 file:text-xs file:text-amber-300" />
+                </div>
               </div>
               {formMsg && <p className="text-sm text-red-400">{formMsg}</p>}
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => { setShowAddProject(false); setFormMsg("") }} className="rounded-lg bg-gray-600 px-4 py-2 text-sm text-white hover:bg-gray-500">Cancel</button>
-                <button type="submit" className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-gray-900 hover:bg-amber-500">Create Project</button>
+                <button type="submit" disabled={saving} className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-gray-900 hover:bg-amber-500 disabled:opacity-50">{saving ? "Uploading & Creating..." : "Create Project"}</button>
               </div>
             </form>
           </div>
@@ -769,11 +818,16 @@ function AdminDashboard() {
                   <label className="mb-1 block text-xs text-gray-400">Website URL</label>
                   <input name="website_url" defaultValue={editingProject.website_url || ""} className="w-full rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="https://..." />
                 </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-400">PDF Brochure</label>
+                  <input ref={editBrochureRef} type="file" accept=".pdf" className="w-full text-xs text-gray-300 file:mr-2 file:rounded file:border-0 file:bg-amber-600/30 file:px-2 file:py-1 file:text-xs file:text-amber-300" />
+                  {editingProject?.brochure_url && <p className="mt-1 text-xs text-green-400">Current: {editingProject.brochure_url}</p>}
+                </div>
               </div>
               {formMsg && <p className="text-sm text-red-400">{formMsg}</p>}
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => { setEditingProject(null); setFormMsg("") }} className="rounded-lg bg-gray-600 px-4 py-2 text-sm text-white hover:bg-gray-500">Cancel</button>
-                <button type="submit" className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-gray-900 hover:bg-amber-500">Save Changes</button>
+                <button type="submit" disabled={saving} className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-gray-900 hover:bg-amber-500 disabled:opacity-50">{saving ? "Uploading & Saving..." : "Save Changes"}</button>
               </div>
             </form>
           </div>

@@ -538,7 +538,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
           </div>
         )}
 
-        {project.description && (
+        {(project.description || (project as any).description_he || (project as any).description_en) && (
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); descLocked.current = true; setShowDesc(true); }}
@@ -548,20 +548,36 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
           </button>
         )}
 
-        {(project as any).website_url && (
-          <div className="mt-2 border-t border-gray-100 pt-2">
-            <a
-              href={(project as any).website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
-            >
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              Visit Website
-            </a>
+        {((project as any).website_url || (project as any).brochure_url) && (
+          <div className="mt-2 border-t border-gray-100 pt-2 flex flex-wrap gap-2">
+            {(project as any).website_url && (
+              <a
+                href={(project as any).website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+              >
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Website
+              </a>
+            )}
+            {(project as any).brochure_url && (
+              <a
+                href={(project as any).brochure_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800"
+              >
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+                Brochure
+              </a>
+            )}
           </div>
         )}
 
@@ -578,7 +594,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
       </div>
     </Link>
       {/* Description Modal */}
-      {showDesc && project.description && (
+      {showDesc && (project.description || (project as any).description_he || (project as any).description_en) && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); descLocked.current = false; setShowDesc(false); }}
