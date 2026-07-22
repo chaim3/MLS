@@ -189,7 +189,11 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // Blog
     "blog.title": "בלוג",
+    "blog.subtitle": "מדריכים, טיפים וחדשות על פרויקטי בנייה חדשים בישראל",
     "blog.articleNotFound": "הכתבה לא נמצאה",
+    "blog.backToBlog": "← חזרה לבלוג",
+    "blog.readMore": "קרא עוד",
+    "blog.noArticles": "אין כתבות עדיין. בדקו שוב בקרוב!",
 
     // Agent
     "agent.loginFailed": "התחברות נכשלה",
@@ -389,7 +393,11 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // Blog
     "blog.title": "Blog",
+    "blog.subtitle": "Guides, tips, and news about new construction projects in Israel",
     "blog.articleNotFound": "Article not found",
+    "blog.backToBlog": "← Back to blog",
+    "blog.readMore": "Read more",
+    "blog.noArticles": "No articles yet. Check back soon!",
 
     // Agent
     "agent.loginFailed": "Login failed",

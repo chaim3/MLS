@@ -61,6 +61,10 @@ async function getDb() {
   try { _db.exec("ALTER TABLE projects ADD COLUMN description_en TEXT NOT NULL DEFAULT ''"); } catch (e) {}
   try { _db.exec("CREATE TABLE IF NOT EXISTS blog_posts (id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, title TEXT NOT NULL, excerpt TEXT NOT NULL DEFAULT '', content_he TEXT NOT NULL DEFAULT '', content_en TEXT NOT NULL DEFAULT '', image_url TEXT NOT NULL DEFAULT '', published_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')))"); } catch (e) {}
   try { _db.exec("CREATE INDEX IF NOT EXISTS idx_blog_slug ON blog_posts(slug)"); } catch (e) {}
+  try { _db.exec("ALTER TABLE blog_posts ADD COLUMN title_he TEXT NOT NULL DEFAULT ''"); } catch (e) {}
+  try { _db.exec("ALTER TABLE blog_posts ADD COLUMN title_en TEXT NOT NULL DEFAULT ''"); } catch (e) {}
+  try { _db.exec("ALTER TABLE blog_posts ADD COLUMN excerpt_he TEXT NOT NULL DEFAULT ''"); } catch (e) {}
+  try { _db.exec("ALTER TABLE blog_posts ADD COLUMN excerpt_en TEXT NOT NULL DEFAULT ''"); } catch (e) {}
   try {
     _db.exec(`CREATE TABLE IF NOT EXISTS project_agents (
       project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -86,7 +90,11 @@ async function getDb() {
       {
         slug: "how-to-buy-a-new-apartment-in-israel",
         title: "איך לקנות דירה חדשה בישראל",
+        title_he: "איך לקנות דירה חדשה בישראל",
+        title_en: "How to Buy a New Apartment in Israel",
         excerpt: "מדריך מקיף לרכישת דירה חדשה מקבלן בישראל — משלב החיפוש ועד קבלת המפתחות.",
+        excerpt_he: "מדריך מקיף לרכישת דירה חדשה מקבלן בישראל — משלב החיפוש ועד קבלת המפתחות.",
+        excerpt_en: "A comprehensive guide to buying a new apartment from a developer in Israel — from the search phase to receiving your keys.",
         content_he: `<h2>שלב 1: הגדרת תקציב</h2><p>לפני שמתחילים לחפש דירה, חשוב להגדיר תקציב ריאלי. קחו בחשבון את המחיר הכולל כולל מע"מ, הוצאות רכישה, ושכר טרחת עורך דין.</p><h2>שלב 2: חיפוש פרויקטים</h2><p>השתמשו בפלטפורמה שלנו כדי למצוא פרויקטים חדשים בכל הארץ. סננו לפי עיר, טווח מחירים וסוג נכס.</p><h2>שלב 3: ביקור בפרויקט</h2><p>קבעו פגישה עם נציג המכירות ובקרו בפרויקט. בדקו את איכות הבנייה, המיקום, והתשתיות בסביבה.</p><h2>שלב 4: חתימת חוזה</h2><p>לאחר שבחרתם דירה, חתמו על חוזה רכישה. מומלץ לערב עורך דין המתמחה בנדל"ן.</p>`,
         content_en: `<h2>Step 1: Define Your Budget</h2><p>Before starting your search, define a realistic budget. Consider the total price including VAT, purchase costs, and legal fees.</p><h2>Step 2: Search for Projects</h2><p>Use our platform to find new construction projects across Israel. Filter by city, price range, and property type.</p><h2>Step 3: Visit the Project</h2><p>Schedule a meeting with the sales representative and visit the project. Check the construction quality, location, and surrounding infrastructure.</p><h2>Step 4: Sign the Contract</h2><p>After choosing an apartment, sign a purchase agreement. It's recommended to involve a real estate attorney.</p>`,
         image_url: "",
@@ -95,7 +103,11 @@ async function getDb() {
       {
         slug: "new-construction-projects-tel-aviv-2026",
         title: "פרויקטים חדשים בתל אביב 2026",
+        title_he: "פרויקטים חדשים בתל אביב 2026",
+        title_en: "New Construction Projects in Tel Aviv 2026",
         excerpt: "סקירה של פרויקטי הבנייה החדשים המבטיחים ביותר בתל אביב לשנת 2026.",
+        excerpt_he: "סקירה של פרויקטי הבנייה החדשים המבטיחים ביותר בתל אביב לשנת 2026.",
+        excerpt_en: "A review of the most promising new construction projects in Tel Aviv for 2026.",
         content_he: `<h2>מגדל היובל</h2><p>מגדל יוקרתי בן 35 קומות בלב תל אביב. דירות נוף לים, גג פנטהאוז, בריכה וחדר כושר. המחירים נעים בין 2.5 ל-5.8 מיליון ש"ח.</p><h2>פרויקטים נוספים</h2><p>תל אביב ממשיכה להתפתח עם פרויקטים חדשים בשכונות פלורנטין, נווה צדק והצפון הישן. המחירים נעים בין 2 ל-8 מיליון ש"ח בהתאם למיקום וגודל הדירה.</p>`,
         content_en: `<h2>Migdal HaYovel</h2><p>A luxurious 35-story tower in the heart of Tel Aviv. Sea-view apartments, penthouse roof, swimming pool, and gym. Prices range from 2.5 to 5.8 million ILS.</p><h2>More Projects</h2><p>Tel Aviv continues to develop with new projects in Florentin, Neve Tzedek, and the Old North neighborhoods. Prices range from 2 to 8 million ILS depending on location and apartment size.</p>`,
         image_url: "",
@@ -104,7 +116,11 @@ async function getDb() {
       {
         slug: "guide-to-real-estate-investment-in-israel",
         title: 'מדריך השקעות נדל"ן בישראל',
+        title_he: 'מדריך השקעות נדל"ן בישראל',
+        title_en: "Guide to Real Estate Investment in Israel",
         excerpt: 'כל מה שצריך לדעת על השקעה בנדל"ן ישראלי — יתרונות, סיכונים ואסטרטגיות.',
+        excerpt_he: 'כל מה שצריך לדעת על השקעה בנדל"ן ישראלי — יתרונות, סיכונים ואסטרטגיות.',
+        excerpt_en: "Everything you need to know about Israeli real estate investment — advantages, risks, and strategies.",
         content_he: `<h2>למה להשקיע בנדל"ן ישראלי?</h2><p>שוק הנדל"ן הישראלי מציע הזדמנויות השקעה אטרקטיביות. הביקוש לדירות חדשות גבוה, המחירים יציבים, והתשואה על השקעה יכולה להיות משמעותית.</p><h2>סוגי השקעות</h2><p>השקעה בדירה חדשה בפריסייל מאפשרת כניסה במחיר נמוך יותר ועליית ערך עד למסירה. השקעה בנדל"ן מניב מספקת תזרים שוטף מהשכרה.</p><h2>טיפים למשקיעים</h2><p>בחרו מיקום אסטרטגי, בדקו את היזם והקבלן, השתמשו במינוף חכם, וגוון את ההשקעות.</p>`,
         content_en: `<h2>Why Invest in Israeli Real Estate?</h2><p>The Israeli real estate market offers attractive investment opportunities. Demand for new apartments is high, prices are stable, and returns can be significant.</p><h2>Investment Types</h2><p>Investing in a new apartment during pre-sale allows entry at a lower price with value appreciation until handover. Income-generating real estate provides ongoing rental cash flow.</p><h2>Tips for Investors</h2><p>Choose strategic locations, research the developer and contractor, use smart leverage, and diversify your investments.</p>`,
         image_url: "",
@@ -112,8 +128,8 @@ async function getDb() {
       },
     ];
     for (const post of posts) {
-      _db.prepare("INSERT INTO blog_posts (id, slug, title, excerpt, content_he, content_en, image_url, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-        .run(crypto.randomUUID?.() || uuid(), post.slug, post.title, post.excerpt, post.content_he, post.content_en, post.image_url, post.published_at);
+      _db.prepare("INSERT INTO blog_posts (id, slug, title, title_he, title_en, excerpt, excerpt_he, excerpt_en, content_he, content_en, image_url, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        .run(crypto.randomUUID?.() || uuid(), post.slug, post.title, post.title_he, post.title_en, post.excerpt, post.excerpt_he, post.excerpt_en, post.content_he, post.content_en, post.image_url, post.published_at);
     }
   }
 
@@ -697,7 +713,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
       if (!post) return Response.json({ error: "Not found" }, { status: 404 });
       return Response.json({ post });
     }
-    const posts = db.prepare("SELECT id, slug, title, excerpt, image_url, published_at, created_at FROM blog_posts WHERE published_at IS NOT NULL ORDER BY published_at DESC").all();
+    const posts = db.prepare("SELECT id, slug, title, title_he, title_en, excerpt, excerpt_he, excerpt_en, image_url, published_at, created_at FROM blog_posts WHERE published_at IS NOT NULL ORDER BY published_at DESC").all();
     return Response.json({ posts });
   }
 
@@ -718,12 +734,12 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const agent = match ? await getSessionAgent(match[1]) : null;
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    const { slug, title, excerpt, content_he, content_en, image_url, published_at } = body;
+    const { slug, title, title_he, title_en, excerpt, excerpt_he, excerpt_en, content_he, content_en, image_url, published_at } = body;
     if (!slug || !title) return Response.json({ error: "slug and title are required" }, { status: 400 });
     const db = await getDb();
     const id = uuid();
-    db.prepare("INSERT INTO blog_posts (id, slug, title, excerpt, content_he, content_en, image_url, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-      .run(id, slug, title, excerpt || "", content_he || "", content_en || "", image_url || "", published_at || null);
+    db.prepare("INSERT INTO blog_posts (id, slug, title, title_he, title_en, excerpt, excerpt_he, excerpt_en, content_he, content_en, image_url, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(id, slug, title, title_he || "", title_en || "", excerpt || "", excerpt_he || "", excerpt_en || "", content_he || "", content_en || "", image_url || "", published_at || null);
     return Response.json({ success: true, id });
   }
 
@@ -733,11 +749,11 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const agent = match ? await getSessionAgent(match[1]) : null;
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    const { id, slug, title, excerpt, content_he, content_en, image_url, published_at } = body;
+    const { id, slug, title, title_he, title_en, excerpt, excerpt_he, excerpt_en, content_he, content_en, image_url, published_at } = body;
     if (!id) return Response.json({ error: "id is required" }, { status: 400 });
     const db = await getDb();
-    db.prepare("UPDATE blog_posts SET slug = COALESCE(?, slug), title = COALESCE(?, title), excerpt = COALESCE(?, excerpt), content_he = COALESCE(?, content_he), content_en = COALESCE(?, content_en), image_url = COALESCE(?, image_url), published_at = COALESCE(?, published_at) WHERE id = ?")
-      .run(slug || null, title || null, excerpt || null, content_he || null, content_en || null, image_url || null, published_at || null, id);
+    db.prepare("UPDATE blog_posts SET slug = COALESCE(?, slug), title = COALESCE(?, title), title_he = COALESCE(?, title_he), title_en = COALESCE(?, title_en), excerpt = COALESCE(?, excerpt), excerpt_he = COALESCE(?, excerpt_he), excerpt_en = COALESCE(?, excerpt_en), content_he = COALESCE(?, content_he), content_en = COALESCE(?, content_en), image_url = COALESCE(?, image_url), published_at = COALESCE(?, published_at) WHERE id = ?")
+      .run(slug || null, title || null, title_he || null, title_en || null, excerpt || null, excerpt_he || null, excerpt_en || null, content_he || null, content_en || null, image_url || null, published_at || null, id);
     return Response.json({ success: true });
   }
 

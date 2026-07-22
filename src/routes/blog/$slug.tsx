@@ -25,24 +25,20 @@ export const Route = createFileRoute("/blog/$slug")({
   },
   component: BlogDetail,
 });
-
 function BlogDetail() {
   const { t, lang } = useTranslate();
   const post = Route.useLoaderData() as any;
-
   if (!post) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-gray-50" dir={lang === "he" ? "rtl" : "ltr"}>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Article not found</h1>
-          <Link to="/blog" className="mt-4 inline-block text-blue-600 hover:underline">← Back to blog</Link>
+          <h1 className="text-2xl font-bold text-gray-900">{t("blog.articleNotFound")}</h1>
+          <Link to="/blog" className="mt-4 inline-block text-blue-600 hover:underline">{t("blog.backToBlog")}</Link>
         </div>
       </div>
     );
   }
-
   const content = lang === "he" ? post.content_he : post.content_en || post.content_he;
-
   return (
     <div className="min-h-dvh bg-gray-50" dir={lang === "he" ? "rtl" : "ltr"}>
       <header className="bg-white shadow-sm">
@@ -63,20 +59,22 @@ function BlogDetail() {
           </nav>
         </div>
       </header>
-
       <main className="mx-auto max-w-3xl px-4 py-12">
         <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={lang === "he" ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
           </svg>
-          Back to blog
+          {t("blog.backToBlog")}
         </Link>
-
         <article className="mt-6">
           <p className="text-sm text-gray-500">{post.published_at}</p>
-          <h1 className="mt-2 text-3xl font-bold text-gray-900">{post.title}</h1>
-          {post.excerpt && (
-            <p className="mt-4 text-lg leading-relaxed text-gray-600">{post.excerpt}</p>
+          <h1 className="mt-2 text-3xl font-bold text-gray-900">
+            {lang === "he" ? (post.title_he || post.title) : (post.title_en || post.title)}
+          </h1>
+          {(lang === "he" ? (post.excerpt_he || post.excerpt) : (post.excerpt_en || post.excerpt)) && (
+            <p className="mt-4 text-lg leading-relaxed text-gray-600">
+              {lang === "he" ? (post.excerpt_he || post.excerpt) : (post.excerpt_en || post.excerpt)}
+            </p>
           )}
           <div className="prose-custom mt-8 rounded-2xl bg-white p-8 shadow-sm">
             <div
@@ -85,7 +83,6 @@ function BlogDetail() {
             />
           </div>
         </article>
-
         <div className="mt-10 border-t border-gray-200 pt-8 text-center">
           <Link to="/" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800">
             <svg className="h-5 w-5" viewBox="0 0 64 64" fill="none">

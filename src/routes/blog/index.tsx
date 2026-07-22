@@ -7,7 +7,11 @@ type BlogPost = {
   id: string;
   slug: string;
   title: string;
+  title_he: string;
+  title_en: string;
   excerpt: string;
+  excerpt_he: string;
+  excerpt_en: string;
   image_url: string;
   published_at: string;
   created_at: string;
@@ -17,11 +21,10 @@ const getPosts = createServerFn({ method: "GET" }).handler(async () => {
   const { getDbAsync } = await import("~/lib/db");
   const db = await getDbAsync();
   const posts = db
-    .prepare("SELECT id, slug, title, excerpt, image_url, published_at, created_at FROM blog_posts WHERE published_at IS NOT NULL ORDER BY published_at DESC")
+    .prepare("SELECT id, slug, title, title_he, title_en, excerpt, excerpt_he, excerpt_en, image_url, published_at, created_at FROM blog_posts WHERE published_at IS NOT NULL ORDER BY published_at DESC")
     .all() as BlogPost[];
   return posts;
 });
-
 export const Route = createFileRoute("/blog/")({
   head: () => ({
     meta: [
@@ -34,11 +37,9 @@ export const Route = createFileRoute("/blog/")({
   loader: () => getPosts(),
   component: BlogIndex,
 });
-
 function BlogIndex() {
   const { t, lang } = useTranslate();
   const posts = Route.useLoaderData();
-
   return (
     <div className="min-h-dvh bg-gray-50" dir={lang === "he" ? "rtl" : "ltr"}>
       <header className="bg-white shadow-sm">
@@ -59,15 +60,13 @@ function BlogIndex() {
           </nav>
         </div>
       </header>
-
       <main className="mx-auto max-w-4xl px-4 py-12">
-        <h1 className="text-4xl font-bold text-gray-900">Blog</h1>
-        <p className="mt-2 text-lg text-gray-600">Guides, tips, and news about new construction projects in Israel</p>
-
+        <h1 className="text-4xl font-bold text-gray-900">{t("blog.title")}</h1>
+        <p className="mt-2 text-lg text-gray-600">{t("blog.subtitle")}</p>
         <div className="mt-10 space-y-8">
           {posts.length === 0 ? (
             <div className="rounded-2xl bg-white p-12 text-center text-gray-400">
-              No articles yet. Check back soon!
+              {t("blog.noArticles")}
             </div>
           ) : (
             posts.map((post) => (
@@ -79,7 +78,7 @@ function BlogIndex() {
                 <div className="flex flex-col sm:flex-row">
                   {post.image_url ? (
                     <div className="h-48 w-full shrink-0 sm:h-auto sm:w-56">
-                      <img src={post.image_url} alt={post.title} className="h-full w-full object-cover" />
+                      <img src={post.image_url} alt={lang === "he" ? (post.title_he || post.title) : (post.title_en || post.title)} className="h-full w-full object-cover" />
                     </div>
                   ) : (
                     <div className="flex h-48 w-full shrink-0 items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 sm:h-auto sm:w-56">
@@ -91,13 +90,13 @@ function BlogIndex() {
                   <div className="flex flex-1 flex-col justify-center p-6">
                     <p className="text-sm text-gray-500">{post.published_at}</p>
                     <h2 className="mt-1 text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {post.title}
+                      {lang === "he" ? (post.title_he || post.title) : (post.title_en || post.title)}
                     </h2>
                     <p className="mt-2 text-sm leading-relaxed text-gray-600 line-clamp-3">
-                      {post.excerpt}
+                      {lang === "he" ? (post.excerpt_he || post.excerpt) : (post.excerpt_en || post.excerpt)}
                     </p>
                     <div className="mt-4 flex items-center gap-1 text-sm font-medium text-blue-600">
-                      Read more
+                      {t("blog.readMore")}
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={lang === "he" ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
                       </svg>
