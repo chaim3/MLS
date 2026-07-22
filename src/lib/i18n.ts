@@ -122,7 +122,6 @@ export const translations: Record<Lang, Record<string, string>> = {
     "dashboard.delete": "מחק",
     "dashboard.leads": "פניות",
     "dashboard.logout": "התנתק",
-    "dashboard.save": "שמור פרויקט",
     "dashboard.new": "חדשים",
     "dashboard.newProjectTitle": "פרויקט חדש",
     "dashboard.editProjectTitle": "עריכת פרויקט",
@@ -162,18 +161,6 @@ export const translations: Record<Lang, Record<string, string>> = {
     "city.haifa": "חיפה",
     "city.givat_ze_ev": "גבעת זאב",
     "city.carmay_hanadiv": "כרמי הנדיב",
-
-    // Footer
-    "footer.browseProjects": "דפדף בפרויקטים",
-    "footer.searchByCity": "חיפוש לפי עיר",
-    "footer.featuredProjects": "פרויקטים מומלצים",
-    "footer.listYourProject": "פרסם פרויקט",
-    "footer.agentDashboard": "לוח בקרה",
-    "footer.premiumPlans": "תוכניות פרימיום",
-    "footer.privacy": "מדיניות פרטיות",
-    "footer.terms": "תנאי שימוש",
-    "footer.forBuyers": "קונים",
-    "footer.forAgents": "יזמים",
 
     // Admin
     "admin.title": "לוח ניהול",
@@ -278,7 +265,6 @@ export const translations: Record<Lang, Record<string, string>> = {
     "agent.detailContact": "Contact",
     "dashboard.editProfile": "Edit Profile",
     "dashboard.profileUpdated": "Profile updated",
-    "dashboard.save": "שמור",
     "project.website": "Project Website",
     "project.visitWebsite": "Visit Project Website",
 
@@ -355,18 +341,6 @@ export const translations: Record<Lang, Record<string, string>> = {
     "city.haifa": "Haifa",
     "city.givat_ze_ev": "Givat Ze'ev",
     "city.carmay_hanadiv": "Carmay HaNadiv",
-
-    // Footer
-    "footer.browseProjects": "Browse Projects",
-    "footer.searchByCity": "Search by City",
-    "footer.featuredProjects": "Featured Projects",
-    "footer.listYourProject": "List Your Project",
-    "footer.agentDashboard": "Agent Dashboard",
-    "footer.premiumPlans": "Premium Plans",
-    "footer.privacy": "Privacy Policy",
-    "footer.terms": "Terms of Service",
-    "footer.forBuyers": "Buyers",
-    "footer.forAgents": "For Agents",
 
     // Admin
     "admin.title": "Admin",
