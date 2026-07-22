@@ -538,10 +538,10 @@ function DashboardPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                {/* Basic Info */}
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                {/* Section: Basic Info */}
                 <div>
-                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Basic Info</h3>
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">{lang === "he" ? "מידע בסיסי" : "Basic Info"}</h3>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectName")}</label>
@@ -576,128 +576,95 @@ function DashboardPage() {
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectAddress")}</label>
-                      <input
-                        name="address"
-                        placeholder={t("dashboard.projectAddress")}
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectStatus")}</label>
-                      <select
-                        name="status"
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-                      >
-                        <option value="pre-sale">{t("status.pre-sale")}</option>
-                        <option value="under-construction">{t("status.under-construction")}</option>
-                        <option value="ready">{t("status.ready")}</option>
-                      </select>
-                    </div>
                   </div>
                 </div>
 
-                {/* Pricing & Units */}
+                {/* Section: Descriptions */}
                 <div>
-                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Pricing & Units</h3>
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">{lang === "he" ? "תיאורים" : "Descriptions"}</h3>
+                  <div className="space-y-4">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectPriceMin")}</label>
-                      <input
-                        name="priceMin"
-                        type="number"
-                        placeholder={t("dashboard.projectPriceMin")}
-                        value={formData.priceMin}
-                        onChange={(e) => setFormData({ ...formData, priceMin: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-                      />
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{lang === "he" ? "תיאור (עברית)" : "Description (Hebrew)"}</label>
+                      <div className="relative">
+                        <textarea
+                          name="descriptionHe"
+                          placeholder={lang === "he" ? "תיאור הפרויקט בעברית" : "Project description in Hebrew"}
+                          rows={3}
+                          value={formData.descriptionHe}
+                          onChange={(e) => setFormData({ ...formData, descriptionHe: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition resize-y"
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!formData.descriptionHe) return;
+                            try {
+                              const res = await fetch("/api/translate", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ q: formData.descriptionHe, source: "he", target: "en" }),
+                              });
+                              const data = await res.json();
+                              if (data.translatedText) {
+                                setFormData(prev => ({ ...prev, descriptionEn: prev.descriptionEn ? prev.descriptionEn + "\n\n" + data.translatedText : data.translatedText }));
+                              }
+                            } catch (e) {}
+                          }}
+                          className="absolute left-2 bottom-2 rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-100"
+                        >
+                          {lang === "he" ? "🔄 תרגם לאנגלית" : "🔄 Translate to English"}
+                        </button>
+                      </div>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectPriceMax")}</label>
-                      <input
-                        name="priceMax"
-                        type="number"
-                        placeholder={t("dashboard.projectPriceMax")}
-                        value={formData.priceMax}
-                        onChange={(e) => setFormData({ ...formData, priceMax: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectUnits")}</label>
-                      <input
-                        name="unitCount"
-                        type="number"
-                        placeholder={t("dashboard.projectUnits")}
-                        value={formData.unitCount}
-                        onChange={(e) => setFormData({ ...formData, unitCount: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-                      />
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{lang === "he" ? "תיאור (אנגלית)" : "Description (English)"}</label>
+                      <div className="relative">
+                        <textarea
+                          name="descriptionEn"
+                          placeholder={lang === "he" ? "תיאור הפרויקט באנגלית" : "Project description in English"}
+                          rows={3}
+                          value={formData.descriptionEn}
+                          onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition resize-y"
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!formData.descriptionEn) return;
+                            try {
+                              const res = await fetch("/api/translate", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ q: formData.descriptionEn, source: "en", target: "he" }),
+                              });
+                              const data = await res.json();
+                              if (data.translatedText) {
+                                setFormData(prev => ({ ...prev, descriptionHe: prev.descriptionHe ? prev.descriptionHe + "\n\n" + data.translatedText : data.translatedText }));
+                              }
+                            } catch (e) {}
+                          }}
+                          className="absolute left-2 bottom-2 rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-100"
+                        >
+                          {lang === "he" ? "🔄 תרגם לעברית" : "🔄 Translate to Hebrew"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Dates & Website */}
+                {/* Section: Address */}
                 <div>
-                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Dates & Links</h3>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectHandover")}</label>
-                      <input
-                        name="handoverDate"
-                        type="text"
-                        placeholder={t("dashboard.projectHandover")}
-                        value={formData.handoverDate}
-                        onChange={(e) => setFormData({ ...formData, handoverDate: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectWebsite")}</label>
-                      <input
-                        name="websiteUrl"
-                        type="url"
-                        placeholder={t("dashboard.projectWebsite")}
-                        value={formData.websiteUrl}
-                        onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-                      />
-                    </div>
-                  </div>
+                  <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectAddress")}</label>
+                  <input
+                    name="address"
+                    placeholder={t("dashboard.projectAddress")}
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                  />
                 </div>
 
-                {/* Brochure & Floor Plan Uploads */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Brochure & Floor Plan Files</h3>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">Brochure URL</label>
-                      <input
-                        name="brochureUrl"
-                        type="text"
-                        placeholder="https://... or upload a file below"
-                        value={formData.brochureUrl}
-                        onChange={(e) => setFormData({ ...formData, brochureUrl: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">Upload Brochure PDF</label>
-                      <input ref={brochureInputRef} type="file" accept=".pdf" className="w-full text-sm text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-amber-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-amber-700 hover:file:bg-amber-100" />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="mb-1 block text-xs font-medium text-gray-500">Upload Floor Plan (PDF/PNG/JPG)</label>
-                      <input ref={floorPlanInputRef} type="file" accept=".pdf,.png,.jpg" className="w-full text-sm text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Property Types */}
+                {/* Section: Property Types */}
                 <div>
                   <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">{t("dashboard.propertyTypes")}</h3>
                   <div className="flex flex-wrap gap-3">
@@ -733,124 +700,152 @@ function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Descriptions */}
+                {/* Section: Pricing */}
                 <div>
-                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">תיאורים / Descriptions</h3>
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">{lang === "he" ? "מחירים" : "Pricing"}</h3>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">תיאור (עברית)</label>
-                      <div className="relative">
-                        <textarea
-                          name="descriptionHe"
-                          placeholder="תיאור הפרויקט בעברית"
-                          rows={4}
-                          value={formData.descriptionHe}
-                          onChange={(e) => setFormData({ ...formData, descriptionHe: e.target.value })}
-                          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition resize-y"
-                        />
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            if (!formData.descriptionHe) return;
-                            try {
-                              const res = await fetch("/api/translate", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ q: formData.descriptionHe, source: "he", target: "en" }),
-                              });
-                              const data = await res.json();
-                              if (data.translatedText) {
-                                setFormData(prev => ({ ...prev, descriptionEn: prev.descriptionEn ? prev.descriptionEn + "\n\n" + data.translatedText : data.translatedText }));
-                              }
-                            } catch (e) {}
-                          }}
-                          className="absolute left-2 bottom-2 rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-100"
-                        >
-                          🔄 תרגם לאנגלית
-                        </button>
-                      </div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectPriceMin")}</label>
+                      <input
+                        name="priceMin"
+                        type="number"
+                        placeholder={t("dashboard.projectPriceMin")}
+                        value={formData.priceMin}
+                        onChange={(e) => setFormData({ ...formData, priceMin: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                      />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">Description (English)</label>
-                      <div className="relative">
-                        <textarea
-                          name="descriptionEn"
-                          placeholder="Project description in English"
-                          rows={4}
-                          value={formData.descriptionEn}
-                          onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })}
-                          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition resize-y"
-                        />
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            if (!formData.descriptionEn) return;
-                            try {
-                              const res = await fetch("/api/translate", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ q: formData.descriptionEn, source: "en", target: "he" }),
-                              });
-                              const data = await res.json();
-                              if (data.translatedText) {
-                                setFormData(prev => ({ ...prev, descriptionHe: prev.descriptionHe ? prev.descriptionHe + "\n\n" + data.translatedText : data.translatedText }));
-                              }
-                            } catch (e) {}
-                          }}
-                          className="absolute left-2 bottom-2 rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-100"
-                        >
-                          🔄 Translate to Hebrew
-                        </button>
-                      </div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectPriceMax")}</label>
+                      <input
+                        name="priceMax"
+                        type="number"
+                        placeholder={t("dashboard.projectPriceMax")}
+                        value={formData.priceMax}
+                        onChange={(e) => setFormData({ ...formData, priceMax: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Photos */}
+                {/* Section: Details */}
                 <div>
-                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Photos & Floor Plans</h3>
-                  <div className="space-y-3">
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">{lang === "he" ? "פרטים נוספים" : "Details"}</h3>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectUnits")}</label>
+                      <input
+                        name="unitCount"
+                        type="number"
+                        placeholder={t("dashboard.projectUnits")}
+                        value={formData.unitCount}
+                        onChange={(e) => setFormData({ ...formData, unitCount: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectHandover")}</label>
+                      <input
+                        name="handoverDate"
+                        type="text"
+                        placeholder={t("dashboard.projectHandover")}
+                        value={formData.handoverDate}
+                        onChange={(e) => setFormData({ ...formData, handoverDate: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectStatus")}</label>
+                      <select
+                        name="status"
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                      >
+                        <option value="pre-sale">{t("status.pre-sale")}</option>
+                        <option value="under-construction">{t("status.under-construction")}</option>
+                        <option value="ready">{t("status.ready")}</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section: Media & Links */}
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">{lang === "he" ? "מדיה וקישורים" : "Media & Links"}</h3>
+                  <div className="space-y-4">
                     <div>
                       <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.photoUrls")}</label>
                       <textarea
                         name="photoUrls"
                         placeholder={t("dashboard.photoUrls")}
-                        rows={3}
+                        rows={2}
                         value={formData.photoUrls}
                         onChange={(e) => setFormData({ ...formData, photoUrls: e.target.value })}
                         className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition resize-y"
                       />
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => projectPhotoInputRef.current?.click()}
-                        className="flex items-center gap-2 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        {t("dashboard.uploadProjectPhoto")}
-                      </button>
-                      <input
-                        ref={projectPhotoInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleProjectPhotoUpload}
-                      />
-                      <span className="text-xs text-gray-400">{t("dashboard.photoHint")}</span>
+                      <div className="mt-2 flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => projectPhotoInputRef.current?.click()}
+                          className="flex items-center gap-2 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                          </svg>
+                          {t("dashboard.uploadProjectPhoto")}
+                        </button>
+                        <input
+                          ref={projectPhotoInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleProjectPhotoUpload}
+                        />
+                        <span className="text-xs text-gray-400">{t("dashboard.photoHint")}</span>
+                      </div>
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.floorPlanUrls")}</label>
                       <textarea
                         name="floorPlanUrls"
                         placeholder={t("dashboard.floorPlanUrls")}
-                        rows={3}
+                        rows={2}
                         value={formData.floorPlanUrls}
                         onChange={(e) => setFormData({ ...formData, floorPlanUrls: e.target.value })}
                         className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition resize-y"
                       />
+                      <div className="mt-2">
+                        <label className="mb-1 block text-xs font-medium text-gray-500">{lang === "he" ? "העלה תוכנית קומה" : "Upload Floor Plan (PDF/PNG/JPG)"}</label>
+                        <input ref={floorPlanInputRef} type="file" accept=".pdf,.png,.jpg" className="w-full text-sm text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{t("dashboard.projectWebsite")}</label>
+                      <input
+                        name="websiteUrl"
+                        type="url"
+                        placeholder={t("dashboard.projectWebsite")}
+                        value={formData.websiteUrl}
+                        onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">{lang === "he" ? "כתובת ברושור" : "Brochure URL"}</label>
+                      <input
+                        name="brochureUrl"
+                        type="text"
+                        placeholder={lang === "he" ? "https://... או העלה קובץ" : "https://... or upload a file below"}
+                        value={formData.brochureUrl}
+                        onChange={(e) => setFormData({ ...formData, brochureUrl: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                      />
+                      <div className="mt-2">
+                        <label className="mb-1 block text-xs font-medium text-gray-500">{lang === "he" ? "העלה ברושור PDF" : "Upload Brochure PDF"}</label>
+                        <input ref={brochureInputRef} type="file" accept=".pdf" className="w-full text-sm text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-amber-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-amber-700 hover:file:bg-amber-100" />
+                      </div>
                     </div>
                   </div>
                 </div>
