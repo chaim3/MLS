@@ -231,9 +231,20 @@ function ProjectDetail() {
         {floorPlans.length > 0 && (
           <div className="mb-8 rounded-2xl bg-white p-6 shadow-sm">
             <h2 className="mb-3 text-xl font-bold">{t("project.floorPlans")}</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-wrap gap-3">
               {floorPlans.map((url: string, i: number) => (
-                <img key={i} src={url} alt={`תוכנית קומה ${i + 1}`} className="h-64 w-full rounded-xl object-contain bg-white p-2" />
+                <a
+                  key={i}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 transition hover:bg-amber-100 hover:border-amber-300"
+                >
+                  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                  </svg>
+                  {lang === "he" ? "תוכנית" : "Floor Plan"}{floorPlans.length > 1 ? ` ${i + 1}` : ""}
+                </a>
               ))}
             </div>
           </div>

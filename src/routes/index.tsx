@@ -422,6 +422,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
   const [showDesc, setShowDesc] = useState(false);
   const descLocked = useRef(false);
   const photos: string[] = JSON.parse(project.photo_urls || "[]");
+  const floorPlanUrls: string[] = JSON.parse(project.floor_plan_urls || "[]");
   const types: string[] = JSON.parse(project.property_types || "[]");
   const statusColors: Record<string, string> = {
     "pre-sale": "bg-amber-100 text-amber-800 border-amber-200",
@@ -548,7 +549,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
           </button>
         )}
 
-        {((project as any).website_url || (project as any).brochure_url) && (
+        {((project as any).website_url || (project as any).brochure_url || floorPlanUrls.length > 0) && (
           <div className="mt-2 border-t border-gray-100 pt-2 flex flex-wrap gap-2">
             {(project as any).website_url && (
               <a
@@ -578,6 +579,21 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
                 Brochure
               </a>
             )}
+            {floorPlanUrls.map((url: string, i: number) => (
+              <a
+                key={i}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-800"
+              >
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+                </svg>
+                {lang === "he" ? "תוכנית" : "Floor Plan"}{floorPlanUrls.length > 1 ? ` ${i + 1}` : ""}
+              </a>
+            ))}
           </div>
         )}
 

@@ -32,6 +32,8 @@ function AdminDashboard() {
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
   const addBrochureRef = useRef<HTMLInputElement>(null);
   const editBrochureRef = useRef<HTMLInputElement>(null);
+  const addFloorPlanRef = useRef<HTMLInputElement>(null);
+  const editFloorPlanRef = useRef<HTMLInputElement>(null);
 
   const handleAddPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -132,6 +134,24 @@ function AdminDashboard() {
           return;
         }
       }
+      // Upload floor plan file if selected
+      const floorPlanFile = addFloorPlanRef.current?.files?.[0];
+      if (floorPlanFile) {
+        const uploadFd = new FormData();
+        uploadFd.append("file", floorPlanFile);
+        const uploadRes = await fetch("/api/admin/projects/upload-floorplan", { method: "POST", body: uploadFd });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          // Append uploaded URL to manual floor_plan_urls or create new array
+          const existing = body.floor_plan_urls ? JSON.parse(body.floor_plan_urls) : [];
+          existing.push(uploadData.url);
+          body.floor_plan_urls = JSON.stringify(existing);
+        } else {
+          setFormMsg(uploadData.error || "Floor plan upload failed");
+          setSaving(false);
+          return;
+        }
+      }
       const res = await fetch("/api/admin/projects/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -192,6 +212,24 @@ function AdminDashboard() {
           body.brochure_url = uploadData.url;
         } else {
           setFormMsg(uploadData.error || "Brochure upload failed");
+          setSaving(false);
+          return;
+        }
+      }
+      // Upload floor plan file if selected
+      const floorPlanFile = editFloorPlanRef.current?.files?.[0];
+      if (floorPlanFile) {
+        const uploadFd = new FormData();
+        uploadFd.append("file", floorPlanFile);
+        const uploadRes = await fetch("/api/admin/projects/upload-floorplan", { method: "POST", body: uploadFd });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          // Append uploaded URL to manual floor_plan_urls or create new array
+          const existing = body.floor_plan_urls ? JSON.parse(body.floor_plan_urls) : [];
+          existing.push(uploadData.url);
+          body.floor_plan_urls = JSON.stringify(existing);
+        } else {
+          setFormMsg(uploadData.error || "Floor plan upload failed");
           setSaving(false);
           return;
         }
@@ -684,6 +722,16 @@ function AdminDashboard() {
                   <input ref={addBrochureRef} type="file" accept=".pdf" className="w-full text-xs text-gray-300 file:mr-2 file:rounded file:border-0 file:bg-amber-600/30 file:px-2 file:py-1 file:text-xs file:text-amber-300" />
                 </div>
               </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">Floor Plans</label>
+                <div className="flex gap-2">
+                  <input name="floor_plan_urls" className="flex-1 rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="JSON array of URLs, e.g. [&quot;https://...&quot;]" />
+                  <label className="shrink-0 rounded-lg bg-blue-600/30 px-3 py-2 text-xs text-blue-300 hover:bg-blue-600/50 cursor-pointer whitespace-nowrap">
+                    Upload File
+                    <input ref={addFloorPlanRef} type="file" accept=".pdf,.png,.jpg" className="hidden" />
+                  </label>
+                </div>
+              </div>
               {formMsg && <p className="text-sm text-red-400">{formMsg}</p>}
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => { setShowAddProject(false); setFormMsg("") }} className="rounded-lg bg-gray-600 px-4 py-2 text-sm text-white hover:bg-gray-500">Cancel</button>
@@ -822,6 +870,16 @@ function AdminDashboard() {
                   <label className="mb-1 block text-xs text-gray-400">PDF Brochure</label>
                   <input ref={editBrochureRef} type="file" accept=".pdf" className="w-full text-xs text-gray-300 file:mr-2 file:rounded file:border-0 file:bg-amber-600/30 file:px-2 file:py-1 file:text-xs file:text-amber-300" />
                   {editingProject?.brochure_url && <p className="mt-1 text-xs text-green-400">Current: {editingProject.brochure_url}</p>}
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">Floor Plans</label>
+                <div className="flex gap-2">
+                  <input name="floor_plan_urls" defaultValue={editingProject.floor_plan_urls || ""} className="flex-1 rounded-lg bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder='JSON array, e.g. ["https://..."]' />
+                  <label className="shrink-0 rounded-lg bg-blue-600/30 px-3 py-2 text-xs text-blue-300 hover:bg-blue-600/50 cursor-pointer whitespace-nowrap">
+                    Upload File
+                    <input ref={editFloorPlanRef} type="file" accept=".pdf,.png,.jpg" className="hidden" />
+                  </label>
                 </div>
               </div>
               {formMsg && <p className="text-sm text-red-400">{formMsg}</p>}
