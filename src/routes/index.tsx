@@ -483,7 +483,7 @@ function ProjectCard({ project, lang, t }: { project: Project; lang: string; t: 
           <h3 className="text-base font-bold leading-snug text-gray-900 transition group-hover:text-blue-600">
             {project.name}
           </h3>
-          {project.featured && (
+          {!!project.featured && (
             <span className="mt-0.5 shrink-0 text-amber-400" title="Featured">★</span>
           )}
         </div>
