@@ -63,6 +63,8 @@ function DashboardPage() {
   const [showProfile, setShowProfile] = useState(false);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const projectPhotoInputRef = useRef<HTMLInputElement>(null);
+  const brochureInputRef = useRef<HTMLInputElement>(null);
+  const floorPlanInputRef = useRef<HTMLInputElement>(null);
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -118,6 +120,7 @@ function DashboardPage() {
       photoUrls: "",
       floorPlanUrls: "",
       websiteUrl: "",
+      brochureUrl: "",
       type_apt: false,
       type_house: false,
       type_villa: false,
@@ -182,6 +185,35 @@ function DashboardPage() {
       websiteUrl: formData.websiteUrl,
     };
 
+    // Upload brochure file if selected
+    const brochureFile = brochureInputRef.current?.files?.[0];
+    if (brochureFile) {
+      const uploadFd = new FormData();
+      uploadFd.append("file", brochureFile);
+      const uploadRes = await fetch("/api/admin/projects/upload-file", { method: "POST", body: uploadFd });
+      const uploadData = await uploadRes.json();
+      if (uploadData.success) {
+        body.brochureUrl = uploadData.url;
+      } else {
+        alert(uploadData.error || "Brochure upload failed");
+        return;
+      }
+    }
+    // Upload floor plan file if selected
+    const fpFile = floorPlanInputRef.current?.files?.[0];
+    if (fpFile) {
+      const uploadFd = new FormData();
+      uploadFd.append("file", fpFile);
+      const uploadRes = await fetch("/api/admin/projects/upload-floorplan", { method: "POST", body: uploadFd });
+      const uploadData = await uploadRes.json();
+      if (uploadData.success) {
+        const existing = body.floorPlanUrls || [];
+        body.floorPlanUrls = [...existing, uploadData.url];
+      } else {
+        alert(uploadData.error || "Floor plan upload failed");
+        return;
+      }
+    }
     const res = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -635,6 +667,32 @@ function DashboardPage() {
                         onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
                         className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Brochure & Floor Plan Uploads */}
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500">Brochure & Floor Plan Files</h3>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">Brochure URL</label>
+                      <input
+                        name="brochureUrl"
+                        type="text"
+                        placeholder="https://... or upload a file below"
+                        value={formData.brochureUrl}
+                        onChange={(e) => setFormData({ ...formData, brochureUrl: e.target.value })}
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-500">Upload Brochure PDF</label>
+                      <input ref={brochureInputRef} type="file" accept=".pdf" className="w-full text-sm text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-amber-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-amber-700 hover:file:bg-amber-100" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="mb-1 block text-xs font-medium text-gray-500">Upload Floor Plan (PDF/PNG/JPG)</label>
+                      <input ref={floorPlanInputRef} type="file" accept=".pdf,.png,.jpg" className="w-full text-sm text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100" />
                     </div>
                   </div>
                 </div>

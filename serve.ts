@@ -448,6 +448,13 @@ async function apiHandler(req: Request): Promise<Response | null> {
   const cookie = req.headers.get("cookie") || "";
   return cookie.includes("admin_token=logged_in");
 }
+  async function checkAgentAuth(req: Request): Promise<boolean> {
+    const cookie = req.headers.get("cookie") || "";
+    const match = cookie.match(/session=([^;]+)/);
+    if (!match) return false;
+    const agent = await getSessionAgent(match[1]);
+    return !!agent;
+  }
 
 // Admin: Login (password-only, env var ADMIN_PASSWORD)
   if (pathname === "/api/admin/login" && req.method === "POST") {
@@ -494,7 +501,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
 
   // Admin: Upload project brochure PDF
   if (pathname === "/api/admin/projects/upload-file" && req.method === "POST") {
-    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req) && !(await checkAgentAuth(req))) return Response.json({ error: "Unauthorized" }, { status: 401 });
     try {
       const formData = await req.formData();
       const file = formData.get("file") as File | null;
@@ -521,7 +528,7 @@ async function apiHandler(req: Request): Promise<Response | null> {
 
   // Admin: Upload floor plan file
   if (pathname === "/api/admin/projects/upload-floorplan" && req.method === "POST") {
-    if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    if (!checkAdminAuth(req) && !(await checkAgentAuth(req))) return Response.json({ error: "Unauthorized" }, { status: 401 });
     try {
       const formData = await req.formData();
       const file = formData.get("file") as File | null;
