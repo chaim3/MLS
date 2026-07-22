@@ -59,8 +59,9 @@ export async function getDbAsync(): Promise<any> {
 
 function seedDemoData(db: any) {
   const agentId = "demo-agent-001";
+  const { hashSync } = require("bcryptjs");
   db.prepare(`INSERT INTO agents (id, name, company, email, phone, password, description) VALUES (?, ?, ?, ?, ?, ?, ?)`)
-    .run(agentId, "יוסי כהן", "כהן נדל״ן וייעוץ", "yossi@cohen-realestate.co.il", "050-1234567", "demo-password-hash", "יועץ נדל״ן מנוסה עם 20 שנות ניסיון בליווי רוכשים בפרויקטים חדשים ברחבי הארץ. מתמחה בפרויקטי יוקרה, דירות להשקעה וקהילות אנגלו-דתיות.");
+    .run(agentId, "יוסי כהן", "כהן נדל״ן וייעוץ", "yossi@cohen-realestate.co.il", "050-1234567", hashSync("demo123", 10), "יועץ נדל״ן מנוסה עם 20 שנות ניסיון בליווי רוכשים בפרויקטים חדשים ברחבי הארץ. מתמחה בפרויקטי יוקרה, דירות להשקעה וקהילות אנגלו-דתיות.");
 
   const projects = [{
     id: "demo-001", name: "מגדל היובל", desc: "מגדל יוקרתי בן 42 קומות בלב תל אביב, במרחק הליכה מכיכר רבין וחוף הים. המגדל מציע דירות 3-5 חדרים, דופלקסים ופנטהאוזים מרהיבים עם נוף לים. הדיירים נהנים מבריכת שחייה על הגג, חדר כושר מאובזר, לובי מעוצב ושירותי קונסיירז' 24/7.", descEn: "A luxurious 42-story tower in the heart of Tel Aviv, walking distance from Rabin Square and the beach. Offering 3-5 room apartments, duplexes, and stunning penthouses with sea views. Residents enjoy a rooftop pool, fully equipped gym, designer lobby, and 24/7 concierge services.", city: "תל אביב", address: "רחוב היובל 15, תל אביב", types: ["דירה","דופלקס","פנטהאוז"], priceMin: 2800000, priceMax: 8500000, units: 120, handover: "רבעון 3 2027", status: "under-construction", featured: 1, website: "https://migdal-hayovel.co.il"
