@@ -161,6 +161,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     "city.haifa": "חיפה",
     "city.givat_ze_ev": "גבעת זאב",
     "city.carmay_hanadiv": "כרמי הנדיב",
+    "city.rishon_le_ziyon": "ראשון לציון",
+    "city.herzliya": "הרצליה",
+    "city.beer_sheva": "באר שבע",
 
     // Admin
     "admin.title": "לוח ניהול",
@@ -341,6 +344,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     "city.haifa": "Haifa",
     "city.givat_ze_ev": "Givat Ze'ev",
     "city.carmay_hanadiv": "Carmay HaNadiv",
+    "city.rishon_le_ziyon": "Rishon LeZion",
+    "city.herzliya": "Herzliya",
+    "city.beer_sheva": "Beer Sheva",
 
     // Admin
     "admin.title": "Admin",
@@ -386,6 +392,9 @@ const cityKeyMap: Record<string, string> = {
   "חיפה": "haifa",
   "givat ze'ev": "givat_ze_ev",
   "CARMAY-HANADIV": "carmay_hanadiv",
+  "ראשון לציון": "rishon_le_ziyon",
+  "הרצליה": "herzliya",
+  "באר שבע": "beer_sheva",
 };
 
 export function translateCity(city: string, lang: Lang): string {
