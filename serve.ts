@@ -452,7 +452,11 @@ async function apiHandler(req: Request): Promise<Response | null> {
     }
     const db = await getDb();
     const projects = db.prepare("SELECT * FROM projects ORDER BY created_at DESC").all();
-    const projectsWithAgents = await Promise.all((projects as any[]).map(async p => ({ ...p, agents: await getProjectAgents(p.id) })));
+    const projectsWithAgents = await Promise.all((projects as any[]).map(async p => ({
+      ...p,
+      agents: await getProjectAgents(p.id),
+      agent_id: ((await getProjectAgents(p.id))[0] || {}).id || "",
+    })));
     const agentsList = db.prepare("SELECT id, name, company, email, phone, photo_url, description, created_at FROM agents ORDER BY created_at DESC").all();
     const leads = db.prepare("SELECT l.*, p.name as project_name, a.name as assigned_agent_name FROM leads l JOIN projects p ON p.id = l.project_id LEFT JOIN agents a ON a.id = l.assigned_agent_id ORDER BY l.created_at DESC LIMIT 100").all();
     const blogPosts = db.prepare("SELECT * FROM blog_posts ORDER BY created_at DESC").all();
@@ -542,13 +546,18 @@ async function apiHandler(req: Request): Promise<Response | null> {
     const agent = match ? await getSessionAgent(match[1]) : null;
     if (!checkAdminAuth(req)) return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
-    const { id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url } = body;
+    const { id, name, description, description_he, description_en, city, address, price_min, price_max, status, handover_date, photo_url, website_url, agent_id } = body;
     if (!id) return Response.json({ error: "Project ID is required" }, { status: 400 });
     const db = await getDb();
     if (!db.prepare("SELECT id FROM projects WHERE id = ?").get(id)) return Response.json({ error: "Not found" }, { status: 404 });
     const photoUrlsJson = photo_url ? JSON.stringify([photo_url]) : undefined;
     db.prepare(`UPDATE projects SET name = COALESCE(?, name), description = COALESCE(?, description), description_he = COALESCE(?, description_he), description_en = COALESCE(?, description_en), city = COALESCE(?, city), address = COALESCE(?, address), price_min = COALESCE(?, price_min), price_max = COALESCE(?, price_max), status = COALESCE(?, status), handover_date = COALESCE(?, handover_date), photo_urls = COALESCE(?, photo_urls), website_url = COALESCE(?, website_url), updated_at = datetime('now') WHERE id = ?`)
       .run(name || null, description || null, description_he || null, description_en || null, city || null, address || null, price_min ? parseInt(price_min) : null, price_max ? parseInt(price_max) : null, status || null, handover_date || null, photoUrlsJson || null, website_url || null, id);
+    // Update agent assignment
+    if (agent_id) {
+      db.prepare("DELETE FROM project_agents WHERE project_id = ?").run(id);
+      db.prepare("INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)").run(id, agent_id);
+    }
     return Response.json({ success: true });
   }
 

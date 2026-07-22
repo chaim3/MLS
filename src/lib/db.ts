@@ -62,7 +62,17 @@ export async function getDbAsync(): Promise<any> {
   // Seed demo data if empty
   const count = _db.prepare("SELECT COUNT(*) as c FROM projects").get() as any;
   if (count.c === 0) {
-    seedDemoData(_db);
+    // Restore from backup if available (preserves owner's photos/links)
+    const backupPath = path.resolve(dbDir, "seed_backup.db");
+    if (fs.existsSync(backupPath)) {
+      _db.close();
+      fs.copyFileSync(backupPath, dbPath);
+      _db = new Database(dbPath);
+      _db.exec("PRAGMA journal_mode = WAL");
+      _db.exec("PRAGMA foreign_keys = ON");
+    } else {
+      seedDemoData(_db);
+    }
   }
   return _db;
 }
@@ -86,9 +96,9 @@ function seedDemoData(db: any) {
   },{
     id: "demo-006", name: "נווה מדבר", desc: "פרויקט דיור מודרני בשכונת הפארק בבאר שבע, צמוד לפארק ההייטק. 200 דירות 3-5 חדרים במחירים נוחים במיוחד. קרוב לאוניברסיטת בן גוריון, תחנת הרכבת צפון, מרכזי קניות ופארקים עירוניים. אידיאלי לזוגות צעירים, משפחות ומשקיעים.", descEn: "A modern housing project in the Park neighborhood of Beer Sheva, adjacent to the High-Tech Park. 200 apartments of 3-5 rooms at exceptionally affordable prices. Close to Ben Gurion University, Beer Sheva North train station, shopping centers, and urban parks. Ideal for young couples, families, and investors.", city: "באר שבע", address: "שדרות רגר 85, באר שבע", types: ["דירה","דירת גן"], priceMin: 1200000, priceMax: 2100000, units: 200, handover: "רבעון 3 2027", status: "under-construction", featured: 0, website: ""
   },{
-    id: "demo-007", name: "Stone", desc: "Discover one of the last opportunities to own a private residence in the Jerusalem Hills - a rare collection of 98 private homes surrounded by breathtaking natural beauty.\n5-8 bedroom private houses | Dutch-inspired street concept | Nature-reserve walking path | 2 parking spaces | Outdoor kitchen, pool & hot tub (optional) | 0% Purchase Tax.", descEn: "Discover one of the last opportunities to own a private residence in the Jerusalem Hills - a rare collection of 98 private homes surrounded by breathtaking natural beauty.\n5-8 bedroom private houses | Dutch-inspired street concept | Nature-reserve walking path | 2 parking spaces | Outdoor kitchen, pool & hot tub (optional) | 0% Purchase Tax.", city: "givat ze'ev", address: "Jerusalem Hills, Givat Ze'ev", types: ["בית פרטי"], priceMin: 0, priceMax: 0, units: 98, handover: "", status: "under-construction", featured: 0, website: ""
+    id: "demo-007", name: "Stone", desc: "Discover one of the last opportunities to own a private residence in the Jerusalem Hills - a rare collection of 98 private homes surrounded by breathtaking natural beauty.\n5-8 bedroom private houses | Dutch-inspired street concept | Nature-reserve walking path | 2 parking spaces | Outdoor kitchen, pool & hot tub (optional) | 0% Purchase Tax.", descEn: "Discover one of the last opportunities to own a private residence in the Jerusalem Hills - a rare collection of 98 private homes surrounded by breathtaking natural beauty.\n5-8 bedroom private houses | Dutch-inspired street concept | Nature-reserve walking path | 2 parking spaces | Outdoor kitchen, pool & hot tub (optional) | 0% Purchase Tax.", city: "givat ze'ev", address: "Jerusalem Hills, Givat Ze'ev", types: ["בית פרטי"], priceMin: 0, priceMax: 0, units: 98, handover: "", status: "under-construction", featured: 0, website: "https://12-stones.co.il/landing/?utm_source=iIn"
   },{
-    id: "demo-008", name: "CARMAY-HANADIV", desc: "*July 19 Webinar:* Discover a Warm Anglo Community Within Reach\n🏡 Carmay HaNadiv offers a warm, growing Anglo dati community, high-standard homes, attractive prices and easy access to the centre of the country.\n💱 NOW, overseas buyers can also benefit from a special exchange rate of $1 = ₪3.5 on the first 10% down payment.\n🖥️ Register now for the webinar to learn more about the community, the homes, and the location.\n*Special rate applies to the first 10% down payment only.", descEn: "*July 19 Webinar:* Discover a Warm Anglo Community Within Reach\n🏡 Carmay HaNadiv offers a warm, growing Anglo dati community, high-standard homes, attractive prices and easy access to the centre of the country.\n💱 NOW, overseas buyers can also benefit from a special exchange rate of $1 = ₪3.5 on the first 10% down payment.\n🖥️ Register now for the webinar to learn more about the community, the homes, and the location.\n*Special rate applies to the first 10% down payment only.", city: "CARMAY-HANADIV", address: "Carmay HaNadiv", types: ["דירה","בית פרטי"], priceMin: 0, priceMax: 0, units: 0, handover: "", status: "under-construction", featured: 0, website: ""
+    id: "demo-008", name: "CARMAY-HANADIV", desc: "*July 19 Webinar:* Discover a Warm Anglo Community Within Reach\n🏡 Carmay HaNadiv offers a warm, growing Anglo dati community, high-standard homes, attractive prices and easy access to the centre of the country.\n💱 NOW, overseas buyers can also benefit from a special exchange rate of $1 = ₪3.5 on the first 10% down payment.\n🖥️ Register now for the webinar to learn more about the community, the homes, and the location.\n*Special rate applies to the first 10% down payment only.", descEn: "*July 19 Webinar:* Discover a Warm Anglo Community Within Reach\n🏡 Carmay HaNadiv offers a warm, growing Anglo dati community, high-standard homes, attractive prices and easy access to the centre of the country.\n💱 NOW, overseas buyers can also benefit from a special exchange rate of $1 = ₪3.5 on the first 10% down payment.\n🖥️ Register now for the webinar to learn more about the community, the homes, and the location.\n*Special rate applies to the first 10% down payment only.", city: "CARMAY-HANADIV", address: "Carmay HaNadiv", types: ["דירה","בית פרטי"], priceMin: 0, priceMax: 0, units: 0, handover: "", status: "under-construction", featured: 0, website: "https://swiy.co/ILNCN"
   }];
 
   const insertProj = db.prepare(`INSERT OR IGNORE INTO projects (id, name, description, description_he, description_en, city, address, property_types, price_min, price_max, unit_count, handover_date, status, featured, website_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
